@@ -264,10 +264,9 @@
       font-size: clamp(1.3rem, 2.1vw, 2.1rem);
       font-weight: 900;
       letter-spacing: 0.12em;
-      background: var(--gold-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+      color: #ffffff;
+      -webkit-text-fill-color: #ffffff;
+      text-shadow: 0 0 15px #FFD700, 0 0 30px rgba(255, 215, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.6);
       text-transform: uppercase;
     }
 
@@ -530,8 +529,8 @@
     .btn-spin-main {
       width: 100%;
       height: clamp(56px, 7vh, 70px);
-      background: var(--gold-gradient);
-      border: 2px solid #fff;
+      background: #ffffff;
+      border: 2px solid rgba(255, 255, 255, 0.9);
       border-radius: 9999px;
       color: #0b0f19;
       font-family: 'Cinzel', 'Inter', sans-serif;
@@ -544,14 +543,15 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      box-shadow: 0 0 35px var(--gold-glow), 0 8px 25px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.35), 0 8px 25px rgba(0, 0, 0, 0.5);
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
       overflow: hidden;
     }
     .btn-spin-main:hover {
       transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 0 50px rgba(245, 158, 11, 0.7), 0 12px 35px rgba(0, 0, 0, 0.6);
+      background: #f8f8f8;
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.5), 0 12px 35px rgba(0, 0, 0, 0.6);
     }
     .btn-spin-main:active {
       transform: translateY(1px) scale(0.98);
@@ -656,6 +656,7 @@
       font-size: 0.76rem;
       font-weight: 700;
       letter-spacing: 0.08em;
+      pointer-events: auto;
     }
     .edge-handle.right:hover {
       background: rgba(245, 158, 11, 0.25);
@@ -666,6 +667,14 @@
       width: 14px;
       height: 14px;
       stroke: currentColor;
+    }
+
+    /* STAGE MODE: Hide chrome UI elements */
+    .stage-dock.hidden-stage,
+    .edge-handle.stage-mode-hidden {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transition: opacity 0.35s ease;
     }
 
     .history-header {
@@ -1343,7 +1352,7 @@
     <!-- DRAGGABLE & RESIZABLE SPIN CONTAINER -->
     <div class="spin-stage-container" id="spinContainer">
       <div class="spin-header">
-        <h1 class="spin-title">D&D ANNIVERSARY</h1>
+        <h1 class="spin-title">D&D OWNDAYS THAILAND</h1>
 
         <!-- ACTIVE PRIZE CARD -->
         <div class="active-prize-card" id="activePrizeCard">
@@ -1626,6 +1635,23 @@
             </label>
           </div>
         </div>
+
+        <div class="form-group" style="margin-top: 14px; background: rgba(245, 158, 11, 0.08); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.3);">
+          <label class="form-label">
+            <span style="color: #ffd700; font-weight: 800;">YouTube BGM</span>
+            <span id="ytBgmStatus" style="font-size: 0.72rem; color: var(--text-muted);">Not loaded</span>
+          </label>
+          <input type="text" class="form-input" id="ytBgmUrlInput" placeholder="Paste YouTube URL (e.g. https://youtu.be/...)" style="margin-bottom: 8px;">
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-primary" id="btnLoadYtBgm" style="flex: 1;">Load YouTube</button>
+            <button class="btn-secondary" id="btnYtPlayPause" style="flex: 1;">Play YT BGM</button>
+          </div>
+          <div style="margin-top: 8px;">
+            <label class="form-label" style="font-size: 0.75rem; color: var(--text-muted);">YouTube Volume</label>
+            <input type="range" min="0" max="100" step="5" value="50" class="form-input" id="ytVolumeSlider">
+          </div>
+          <span style="font-size: 0.68rem; color: var(--text-muted); margin-top: 4px;">Audio plays via embedded YouTube player. Works with any public YouTube video URL.</span>
+        </div>
       </div>
 
       <!-- TAB: RESET & DATA -->
@@ -1750,6 +1776,9 @@
   <!-- TOAST ALERTS CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- HIDDEN YOUTUBE PLAYER FOR BGM -->
+  <div id="ytPlayerContainer" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
+
   <!-- BACKGROUND MUSIC AUDIO ELEMENT -->
   <audio id="bgmAudio" loop playsinline></audio>
 
@@ -1779,7 +1808,8 @@
       spinPhase: 'IDLE', // 'IDLE', 'ACCEL', 'CRUISE', 'DECEL', 'SETTLE'
       sfxEnabled: true,
       bgmPlaying: false,
-      pendingWinner: null // { participant, prize, record }
+      pendingWinner: null, // { participant, prize, record }
+      stageMode: false
     };
 
     /* =====================================================================
@@ -3212,7 +3242,9 @@
       }
 
       // HOTKEYS
-      if (e.key === 'w' || e.key === 'W') {
+      if (e.key === 'h' || e.key === 'H') {
+        toggleStageMode();
+      } else if (e.key === 'w' || e.key === 'W') {
         toggleHistoryPanel();
       } else if (e.key === 's' || e.key === 'S') {
         checkAdminAccess();
@@ -3229,6 +3261,26 @@
       if (!state.isSpinning) startSpin();
       else forceStopSpin();
     };
+    /* =====================================================================
+       STAGE MODE (H HOTKEY)
+       ===================================================================== */
+    function toggleStageMode() {
+      state.stageMode = !state.stageMode;
+      const dock = document.getElementById('stageDock');
+      const rightEdge = document.getElementById('rightHistoryToggleBtn');
+      const settingsDrawer = document.getElementById('settingsDrawer');
+
+      if (state.stageMode) {
+        dock.classList.add('hidden-stage');
+        rightEdge.classList.add('stage-mode-hidden');
+        settingsDrawer.classList.remove('open');
+        showToast('Stage Mode: ON -- Press H to toggle');
+      } else {
+        dock.classList.remove('hidden-stage');
+        rightEdge.classList.remove('stage-mode-hidden');
+        showToast('Stage Mode: OFF');
+      }
+    }
 
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
@@ -3359,6 +3411,115 @@
         bgmAudio.src = url;
         showToast('Updated BGM URL');
         if (state.bgmPlaying) bgmAudio.play();
+      }
+    };
+
+    /* =====================================================================
+       YOUTUBE BGM INTEGRATION (IFrame Player API)
+       ===================================================================== */
+    let ytPlayer = null;
+    let ytApiReady = false;
+    let ytPendingVideoId = null;
+
+    function extractYouTubeVideoId(url) {
+      if (!url) return null;
+      let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/);
+      if (match) return match[1];
+      match = url.match(/^([a-zA-Z0-9_-]{11})$/);
+      return match ? match[1] : null;
+    }
+
+    function loadYouTubeApi() {
+      if (ytApiReady || document.getElementById('ytApiScript')) return;
+      const tag = document.createElement('script');
+      tag.id = 'ytApiScript';
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+
+    window.onYouTubeIframeAPIReady = function () {
+      ytApiReady = true;
+      if (ytPendingVideoId) {
+        createYtPlayer(ytPendingVideoId);
+        ytPendingVideoId = null;
+      }
+    };
+
+    function createYtPlayer(videoId) {
+      if (ytPlayer && ytPlayer.destroy) {
+        try { ytPlayer.destroy(); } catch (ex) {}
+      }
+      document.getElementById('ytPlayerContainer').innerHTML = '';
+      const div = document.createElement('div');
+      div.id = 'ytPlayerFrame';
+      document.getElementById('ytPlayerContainer').appendChild(div);
+
+      ytPlayer = new YT.Player('ytPlayerFrame', {
+        width: '1',
+        height: '1',
+        videoId: videoId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          loop: 1,
+          playlist: videoId,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0
+        },
+        events: {
+          onReady: function (ev) {
+            ev.target.setVolume(parseInt(document.getElementById('ytVolumeSlider').value, 10));
+            document.getElementById('ytBgmStatus').textContent = 'Ready';
+            document.getElementById('ytBgmStatus').style.color = '#10b981';
+            showToast('YouTube BGM loaded and ready.');
+          },
+          onError: function () {
+            document.getElementById('ytBgmStatus').textContent = 'Error';
+            document.getElementById('ytBgmStatus').style.color = '#f87171';
+            showToast('YouTube BGM: Failed to load video.');
+          }
+        }
+      });
+    }
+
+    document.getElementById('btnLoadYtBgm').onclick = () => {
+      const url = document.getElementById('ytBgmUrlInput').value.trim();
+      const videoId = extractYouTubeVideoId(url);
+      if (!videoId) {
+        showToast('Invalid YouTube URL. Please paste a valid link.');
+        return;
+      }
+      document.getElementById('ytBgmStatus').textContent = 'Loading...';
+      document.getElementById('ytBgmStatus').style.color = '#fbbf24';
+      loadYouTubeApi();
+      if (ytApiReady) {
+        createYtPlayer(videoId);
+      } else {
+        ytPendingVideoId = videoId;
+      }
+    };
+
+    document.getElementById('btnYtPlayPause').onclick = () => {
+      if (!ytPlayer || typeof ytPlayer.getPlayerState !== 'function') {
+        showToast('Load a YouTube URL first.');
+        return;
+      }
+      const playerState = ytPlayer.getPlayerState();
+      if (playerState === YT.PlayerState.PLAYING) {
+        ytPlayer.pauseVideo();
+        document.getElementById('btnYtPlayPause').textContent = 'Play YT BGM';
+        showToast('YouTube BGM paused.');
+      } else {
+        ytPlayer.playVideo();
+        document.getElementById('btnYtPlayPause').textContent = 'Pause YT BGM';
+        showToast('YouTube BGM playing.');
+      }
+    };
+
+    document.getElementById('ytVolumeSlider').oninput = (e) => {
+      if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
+        ytPlayer.setVolume(parseInt(e.target.value, 10));
       }
     };
 
