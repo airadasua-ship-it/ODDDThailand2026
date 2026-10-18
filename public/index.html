@@ -529,8 +529,8 @@
     .btn-spin-main {
       width: 100%;
       height: clamp(56px, 7vh, 70px);
-      background: #ffffff;
-      border: 2px solid rgba(255, 255, 255, 0.9);
+      background: linear-gradient(135deg, #FFFFFF 0%, #FFF3B0 35%, #FDE047 70%, #FFD700 100%);
+      border: 2px solid rgba(255, 255, 255, 0.95);
       border-radius: 9999px;
       color: #0b0f19;
       font-family: 'Cinzel', 'Inter', sans-serif;
@@ -543,15 +543,15 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      box-shadow: 0 0 25px rgba(255, 255, 255, 0.35), 0 8px 25px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.45), 0 8px 25px rgba(0, 0, 0, 0.5);
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
       overflow: hidden;
     }
     .btn-spin-main:hover {
       transform: translateY(-2px) scale(1.02);
-      background: #f8f8f8;
-      box-shadow: 0 0 40px rgba(255, 255, 255, 0.5), 0 12px 35px rgba(0, 0, 0, 0.6);
+      background: linear-gradient(135deg, #FFFFFF 0%, #FFF8D6 30%, #FDE68A 65%, #F59E0B 100%);
+      box-shadow: 0 0 45px rgba(255, 215, 0, 0.65), 0 12px 35px rgba(0, 0, 0, 0.6);
     }
     .btn-spin-main:active {
       transform: translateY(1px) scale(0.98);
@@ -572,12 +572,18 @@
       display: inline-flex;
       align-items: center;
       padding: 3px 10px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(11, 15, 25, 0.12);
+      border: 1px solid rgba(11, 15, 25, 0.25);
       border-radius: 6px;
+      color: #0b0f19;
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.05em;
+    }
+    .btn-spin-main.is-spinning .spin-kbd-hint {
+      background: rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
     }
 
     .slot-status-bar {
@@ -669,12 +675,16 @@
       stroke: currentColor;
     }
 
-    /* STAGE MODE: Hide chrome UI elements */
+    /* STAGE MODE: Hide top console bar and chrome UI elements */
+    body.stage-mode #stageDock,
     .stage-dock.hidden-stage,
-    .edge-handle.stage-mode-hidden {
+    body.stage-mode .edge-handle,
+    .edge-handle.stage-mode-hidden,
+    body.stage-mode #settingsDrawer {
+      display: none !important;
       opacity: 0 !important;
+      visibility: hidden !important;
       pointer-events: none !important;
-      transition: opacity 0.35s ease;
     }
 
     .history-header {
@@ -1343,6 +1353,11 @@
         <span id="dockWinnerCount">Winners (0)</span>
       </button>
 
+      <button class="dock-btn" id="btnToggleStageMode" title="Stage Mode: Hide Top Console Bar (Hotkey: H)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>Stage Mode</span>
+      </button>
+
       <button class="dock-btn" id="btnToggleFullscreen" title="Fullscreen (Hotkey: F)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="21 15 21 21 15 21"/><polyline points="3 9 3 3 9 3"/></svg>
         <span>Fullscreen</span>
@@ -1539,6 +1554,19 @@
             <label class="form-label">Max Height (px)</label>
             <input type="number" class="form-input" id="cfgStageHeight" placeholder="Auto (100vh)">
           </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 14px; margin-bottom: 16px; background: rgba(0, 0, 0, 0.35); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.15);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 0.82rem; font-weight: 800; color: #ffd700;">Live Stage Presentation Mode</span>
+            <span style="font-size: 0.72rem; color: #94a3b8; font-family: monospace;">Hotkey: [H]</span>
+          </div>
+          <p style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+            Hides the top console bar, menus, and side toggle handles for a clean LED stage display.
+          </p>
+          <button class="btn-primary" id="btnTriggerStageMode" style="width: 100%;">
+            Toggle Stage Mode (Press H)
+          </button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -3242,17 +3270,23 @@
       }
 
       // HOTKEYS
-      if (e.key === 'h' || e.key === 'H') {
+      if (e.key === 'h' || e.key === 'H' || e.code === 'KeyH') {
+        e.preventDefault();
         toggleStageMode();
-      } else if (e.key === 'w' || e.key === 'W') {
+      } else if (e.key === 'w' || e.key === 'W' || e.code === 'KeyW') {
+        e.preventDefault();
         toggleHistoryPanel();
-      } else if (e.key === 's' || e.key === 'S') {
+      } else if (e.key === 's' || e.key === 'S' || e.code === 'KeyS') {
+        e.preventDefault();
         checkAdminAccess();
-      } else if (e.key === 'p' || e.key === 'P') {
+      } else if (e.key === 'p' || e.key === 'P' || e.code === 'KeyP') {
+        e.preventDefault();
         showPrizeRevealModal();
-      } else if (e.key === 'f' || e.key === 'F') {
+      } else if (e.key === 'f' || e.key === 'F' || e.code === 'KeyF') {
+        e.preventDefault();
         toggleFullscreen();
-      } else if (e.key === 'm' || e.key === 'M') {
+      } else if (e.key === 'm' || e.key === 'M' || e.code === 'KeyM') {
+        e.preventDefault();
         toggleSfx();
       }
     });
@@ -3261,25 +3295,55 @@
       if (!state.isSpinning) startSpin();
       else forceStopSpin();
     };
+
     /* =====================================================================
        STAGE MODE (H HOTKEY)
        ===================================================================== */
-    function toggleStageMode() {
-      state.stageMode = !state.stageMode;
+    function toggleStageMode(forceState = null) {
+      state.stageMode = (forceState !== null) ? forceState : !state.stageMode;
+      localStorage.setItem('dnd_stage_mode', state.stageMode);
+
       const dock = document.getElementById('stageDock');
       const rightEdge = document.getElementById('rightHistoryToggleBtn');
       const settingsDrawer = document.getElementById('settingsDrawer');
 
       if (state.stageMode) {
-        dock.classList.add('hidden-stage');
-        rightEdge.classList.add('stage-mode-hidden');
-        settingsDrawer.classList.remove('open');
-        showToast('Stage Mode: ON -- Press H to toggle');
+        document.body.classList.add('stage-mode');
+        if (dock) {
+          dock.classList.add('hidden-stage');
+          dock.style.display = 'none';
+        }
+        if (rightEdge) {
+          rightEdge.classList.add('stage-mode-hidden');
+          rightEdge.style.display = 'none';
+        }
+        if (settingsDrawer) {
+          settingsDrawer.classList.remove('open');
+          settingsDrawer.style.display = 'none';
+        }
+        showToast('Stage Mode: ON (Top Console Bar Hidden -- Press H to restore)');
       } else {
-        dock.classList.remove('hidden-stage');
-        rightEdge.classList.remove('stage-mode-hidden');
-        showToast('Stage Mode: OFF');
+        document.body.classList.remove('stage-mode');
+        if (dock) {
+          dock.classList.remove('hidden-stage');
+          dock.style.display = '';
+        }
+        if (rightEdge) {
+          rightEdge.classList.remove('stage-mode-hidden');
+          rightEdge.style.display = '';
+        }
+        if (settingsDrawer) {
+          settingsDrawer.style.display = '';
+        }
+        showToast('Stage Mode: OFF (Console Bar Restored)');
       }
+    }
+
+    if (document.getElementById('btnToggleStageMode')) {
+      document.getElementById('btnToggleStageMode').onclick = () => toggleStageMode();
+    }
+    if (document.getElementById('btnTriggerStageMode')) {
+      document.getElementById('btnTriggerStageMode').onclick = () => toggleStageMode();
     }
 
     function toggleFullscreen() {
