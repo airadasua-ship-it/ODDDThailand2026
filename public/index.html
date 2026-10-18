@@ -24,14 +24,12 @@
       --radius-lg: 22px;
       --radius-xl: 30px;
       
-      /* STAGE CALIBRATION VARIABLES */
+      /* CALIBRATION DEFAULTS */
       --stage-scale: 1;
       --stage-max-width: 100vw;
       --stage-max-height: 100vh;
-      --spin-left: clamp(24px, 4.5vw, 85px);
-      --history-right: clamp(16px, 2vw, 32px);
-      --history-width: clamp(280px, 20vw, 360px);
-      --spin-width: clamp(380px, 32vw, 520px);
+      --spin-width-default: clamp(380px, 32vw, 520px);
+      --history-width-default: clamp(280px, 20vw, 360px);
     }
 
     * {
@@ -88,7 +86,7 @@
       pointer-events: none;
     }
 
-    /* STAGE WRAPPER FOR RESOLUTION CALIBRATION */
+    /* MAIN STAGE WRAPPER */
     #stageWrapper {
       position: absolute;
       top: 0;
@@ -183,19 +181,72 @@
       white-space: nowrap;
     }
 
-    /* LEFT SIDE SPIN CONTAINER - DELIBERATELY OVERLAPPING THE D&D TEXT AREA */
+    /* DRAGGABLE & RESIZABLE SPIN CONTAINER */
     .spin-stage-container {
-      position: absolute;
-      left: var(--spin-left);
+      position: fixed;
+      left: clamp(24px, 4.5vw, 85px);
       top: 50%;
       transform: translateY(-50%);
-      width: var(--spin-width);
+      width: var(--spin-width-default);
       z-index: 20;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: clamp(14px, 2vh, 22px);
+      gap: 12px;
       pointer-events: auto;
+      touch-action: none;
+    }
+
+    /* DRAG BAR FOR PANELS */
+    .panel-drag-bar {
+      width: 100%;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      color: rgba(245, 158, 11, 0.5);
+      transition: color 0.2s, background 0.2s;
+      border-top-left-radius: var(--radius-xl);
+      border-top-right-radius: var(--radius-xl);
+      margin-bottom: 2px;
+    }
+    .panel-drag-bar:hover {
+      color: #ffd700;
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .panel-drag-bar:active {
+      cursor: grabbing;
+    }
+    .panel-drag-bar svg {
+      width: 24px;
+      height: 8px;
+      fill: currentColor;
+    }
+
+    /* RESIZE HANDLE FOR PANELS */
+    .panel-resize-handle {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      cursor: se-resize;
+      color: rgba(245, 158, 11, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 25;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .panel-resize-handle:hover {
+      color: #ffd700;
+      transform: scale(1.15);
+    }
+    .panel-resize-handle svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
     }
 
     /* LUXURY TITLE & ACTIVE PRIZE BANNER */
@@ -210,7 +261,7 @@
 
     .spin-title {
       font-family: 'Cinzel', serif;
-      font-size: clamp(1.4rem, 2.2vw, 2.2rem);
+      font-size: clamp(1.3rem, 2.1vw, 2.1rem);
       font-weight: 900;
       letter-spacing: 0.12em;
       background: var(--gold-gradient);
@@ -227,7 +278,7 @@
       -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(245, 158, 11, 0.35);
       border-radius: var(--radius-md);
-      padding: 10px 18px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -263,7 +314,7 @@
       letter-spacing: 0.08em;
     }
     .prize-title-display {
-      font-size: clamp(0.95rem, 1.1vw, 1.15rem);
+      font-size: clamp(0.92rem, 1.05vw, 1.15rem);
       font-weight: 700;
       color: #fff;
       white-space: nowrap;
@@ -304,7 +355,7 @@
       -webkit-backdrop-filter: blur(20px);
       border: 2px solid rgba(245, 158, 11, 0.55);
       border-radius: var(--radius-xl);
-      padding: clamp(14px, 2vh, 22px);
+      padding: clamp(12px, 1.8vh, 20px);
       box-shadow: 0 0 45px rgba(245, 158, 11, 0.25), 0 25px 60px rgba(0, 0, 0, 0.7);
       display: flex;
       flex-direction: column;
@@ -417,7 +468,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 35px;
+      padding: 0 32px;
       box-sizing: border-box;
     }
     .participant-card .card-content {
@@ -449,7 +500,7 @@
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
     }
     .participant-name {
-      font-size: clamp(1.4rem, 2vw, 1.85rem);
+      font-size: clamp(1.35rem, 1.9vw, 1.85rem);
       font-weight: 800;
       color: #ffffff;
       letter-spacing: 0.03em;
@@ -469,7 +520,7 @@
     /* CONTROLS AREA BELOW SLOT */
     .slot-actions {
       width: 100%;
-      margin-top: 18px;
+      margin-top: 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -478,7 +529,7 @@
 
     .btn-spin-main {
       width: 100%;
-      height: clamp(58px, 7.5vh, 72px);
+      height: clamp(56px, 7vh, 70px);
       background: var(--gold-gradient);
       border: 2px solid #fff;
       border-radius: 9999px;
@@ -553,14 +604,14 @@
       box-shadow: 0 0 8px #10b981;
     }
 
-    /* PERMANENT WINNER HISTORY PANEL (ALWAYS VISIBLE ON RIGHT EDGE) */
-    .winner-history-permanent {
+    /* DRAGGABLE, RESIZABLE, AND HIDEABLE WINNER HISTORY PANEL */
+    .winner-history-panel {
       position: fixed;
-      right: var(--history-right);
+      right: clamp(16px, 2vw, 32px);
       top: clamp(16px, 2.5vh, 28px);
-      width: var(--history-width);
+      width: var(--history-width-default);
       height: calc(100vh - clamp(32px, 5vh, 56px));
-      background: rgba(10, 15, 28, 0.84);
+      background: rgba(10, 15, 28, 0.86);
       backdrop-filter: blur(22px);
       -webkit-backdrop-filter: blur(22px);
       border: 1px solid rgba(245, 158, 11, 0.35);
@@ -571,15 +622,63 @@
       flex-direction: column;
       overflow: hidden;
       pointer-events: auto;
+      touch-action: none;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+    .winner-history-panel.collapsed {
+      transform: translateX(calc(100% + 50px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* RIGHT EDGE TOGGLE BUTTON TO REVEAL/HIDE HISTORY */
+    .edge-handle.right {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-right: none;
+      border-top-left-radius: 14px;
+      border-bottom-left-radius: 14px;
+      color: var(--gold-light);
+      padding: 14px 10px;
+      cursor: pointer;
+      z-index: 55;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s ease;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .edge-handle.right:hover {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: #ffd700;
+      color: #fff;
+    }
+    .edge-handle.right svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
     }
 
     .history-header {
-      padding: 16px 20px;
+      padding: 12px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(0, 0, 0, 0.25);
+      cursor: grab;
+    }
+    .history-header:active {
+      cursor: grabbing;
     }
     .history-title-wrap {
       display: flex;
@@ -1071,7 +1170,7 @@
       max-width: 80%;
     }
 
-    /* MINIMALIST WINNER OVERLAY (STRICTLY NO BUTTONS) */
+    /* MINIMALIST WINNER OVERLAY (STRICTLY NO ACTION BUTTONS) */
     .winner-minimal-modal {
       width: clamp(380px, 92vw, 680px);
       border-color: #ffd700;
@@ -1187,17 +1286,6 @@
       85% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-12px); }
     }
-
-    @media (max-width: 900px) {
-      .spin-stage-container {
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 92vw;
-      }
-      .winner-history-permanent {
-        display: none;
-      }
-    }
   </style>
 </head>
 <body>
@@ -1241,13 +1329,18 @@
         <span id="sfxLabel">SFX: ON</span>
       </button>
 
+      <button class="dock-btn" id="btnToggleHistoryDock" title="Toggle Winners Panel (Hotkey: W)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+        <span id="dockWinnerCount">Winners (0)</span>
+      </button>
+
       <button class="dock-btn" id="btnToggleFullscreen" title="Fullscreen (Hotkey: F)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="21 15 21 21 15 21"/><polyline points="3 9 3 3 9 3"/></svg>
         <span>Fullscreen</span>
       </button>
     </div>
 
-    <!-- LEFT SIDE SPIN CONTAINER (OVERLAPS D&D LOGO AREA) -->
+    <!-- DRAGGABLE & RESIZABLE SPIN CONTAINER -->
     <div class="spin-stage-container" id="spinContainer">
       <div class="spin-header">
         <h1 class="spin-title">D&D ANNIVERSARY</h1>
@@ -1270,7 +1363,12 @@
       </div>
 
       <!-- MAIN SLOT MACHINE CONSOLE -->
-      <div class="slot-machine-frame">
+      <div class="slot-machine-frame" id="slotMachineFrame">
+        <!-- DRAG BAR -->
+        <div class="panel-drag-bar" id="spinDragBar" title="Drag to Move Spin Console">
+          <svg viewBox="0 0 24 8"><circle cx="4" cy="4" r="1.5"/><circle cx="12" cy="4" r="1.5"/><circle cx="20" cy="4" r="1.5"/></svg>
+        </div>
+
         <div class="slot-corner tl"></div>
         <div class="slot-corner tr"></div>
         <div class="slot-corner bl"></div>
@@ -1302,21 +1400,31 @@
             <span style="font-size: 0.76rem;" id="spinTipText">Press SPACE to spin / stop</span>
           </div>
         </div>
+
+        <!-- RESIZE HANDLE -->
+        <div class="panel-resize-handle" id="spinResizeHandle" title="Drag to Resize">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="14" y1="2" x2="2" y2="14"/><line x1="14" y1="7" x2="7" y2="14"/><line x1="14" y1="12" x2="12" y2="14"/></svg>
+        </div>
       </div>
     </div>
 
-    <!-- PERMANENT WINNER HISTORY PANEL (ALWAYS VISIBLE ON RIGHT) -->
-    <div class="winner-history-permanent" id="winnerHistoryPanel">
-      <div class="history-header">
+    <!-- HIDEABLE, DRAGGABLE, AND RESIZABLE WINNER HISTORY PANEL -->
+    <div class="winner-history-panel" id="winnerHistoryPanel">
+      <div class="history-header" id="historyDragBar" title="Drag to Move History Panel">
         <div class="history-title-wrap">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffd700" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1h10v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
           <span class="history-title">WINNERS</span>
           <span class="history-count-badge" id="historyCountBadge">0</span>
         </div>
-        <button class="history-export-btn" id="btnExportCsv" title="Export Winners as CSV with UTF-8 BOM">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Export CSV</span>
-        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="history-export-btn" id="btnExportCsv" title="Export Winners as CSV with UTF-8 BOM">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export CSV</span>
+          </button>
+          <button class="panel-close-btn" id="btnCollapseHistory" title="Hide Panel (Hotkey: W)" style="width: 28px; height: 28px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="history-body" id="historyListContainer">
@@ -1324,6 +1432,17 @@
           Winners will appear here live during the draw.
         </div>
       </div>
+
+      <!-- RESIZE HANDLE FOR HISTORY PANEL -->
+      <div class="panel-resize-handle" id="historyResizeHandle" title="Drag to Resize">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="14" y1="2" x2="2" y2="14"/><line x1="14" y1="7" x2="7" y2="14"/><line x1="14" y1="12" x2="12" y2="14"/></svg>
+      </div>
+    </div>
+
+    <!-- RIGHT EDGE TOGGLE BUTTON TO REVEAL/HIDE HISTORY -->
+    <div class="edge-handle right" id="rightHistoryToggleBtn" title="Toggle Winners Panel (Hotkey: W)">
+      <svg id="historyToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      <span style="writing-mode: vertical-rl; transform: rotate(180deg);" id="rightEdgeCount">WINNERS (0)</span>
     </div>
 
   </div> <!-- /#stageWrapper -->
@@ -1367,7 +1486,7 @@
     </div>
 
     <div class="panel-tabs">
-      <div class="panel-tab active" data-tab="tab-screen">Screen Calibration</div>
+      <div class="panel-tab active" data-tab="tab-stage">Stage & Layout</div>
       <div class="panel-tab" data-tab="tab-sheet">Sheet Sync</div>
       <div class="panel-tab" data-tab="tab-prizes">Prizes</div>
       <div class="panel-tab" data-tab="tab-sound">Audio / BGM</div>
@@ -1375,21 +1494,34 @@
     </div>
 
     <div class="panel-body">
-      <!-- TAB: SCREEN CALIBRATION -->
-      <div class="tab-content" id="tab-screen">
+      <!-- TAB: STAGE & LAYOUT CONFIGURATION -->
+      <div class="tab-content" id="tab-stage">
         <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px;">
-          Calibrate bounds, scale, and positioning to fit non-standard ultra-wide LED stage displays.
+          Configure spin mechanics and stage scaling. Both panels on screen can also be freely moved and resized by dragging!
+        </div>
+
+        <!-- 1. CONFIGURABLE SPIN DURATION -->
+        <div class="form-group" style="margin-bottom: 16px; background: rgba(245, 158, 11, 0.08); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.3);">
+          <label class="form-label">
+            <span style="color: #ffd700; font-weight: 800;">Spin Duration (Seconds)</span>
+            <span id="labelSpinDuration" style="color: #ffd700; font-weight: 800; font-size: 1rem;">15s</span>
+          </label>
+          <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+            <input type="range" min="3" max="60" step="1" value="15" class="form-input" id="cfgSpinDuration" style="flex: 1;">
+            <input type="number" min="3" max="60" value="15" class="form-input" id="numSpinDuration" style="width: 75px; text-align: center;">
+          </div>
+          <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Controls the total suspense time before natural landing (e.g. 5s, 10s, 15s). Spacebar still stops instantly.</span>
         </div>
 
         <div class="form-group" style="margin-bottom: 12px;">
           <label class="form-label">
-            <span>Stage Zoom / Scale</span>
+            <span>Overall Stage Zoom / Scale</span>
             <span id="labelStageScale">100%</span>
           </label>
           <input type="range" min="60" max="140" step="1" value="100" class="form-input" id="cfgStageScale">
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 14px;">
           <div class="form-group" style="flex: 1;">
             <label class="form-label">Max Width (px)</label>
             <input type="number" class="form-input" id="cfgStageWidth" placeholder="Auto (100vw)">
@@ -1400,25 +1532,9 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label class="form-label">
-            <span>Spin Console Left Offset</span>
-            <span id="labelSpinLeft">40px</span>
-          </label>
-          <input type="range" min="0" max="300" step="5" value="40" class="form-input" id="cfgSpinLeft">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 18px;">
-          <label class="form-label">
-            <span>History Panel Right Offset</span>
-            <span id="labelHistoryRight">24px</span>
-          </label>
-          <input type="range" min="0" max="200" step="4" value="24" class="form-input" id="cfgHistoryRight">
-        </div>
-
-        <div style="display: flex; gap: 8px;">
-          <button class="btn-primary" id="btnApplyScreenConfig" style="flex: 1;">Apply Calibration</button>
-          <button class="btn-secondary" id="btnResetScreenConfig">Reset Auto</button>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn-primary" id="btnApplyStageConfig">Save Stage Configuration</button>
+          <button class="btn-secondary" id="btnResetPanelPositions">Reset Panel Positions & Sizes to Default</button>
         </div>
       </div>
 
@@ -1549,7 +1665,7 @@
     </div>
   </div>
 
-  <!-- MINIMALIST WINNER SPOTLIGHT OVERLAY (STRICTLY NO ACTION BUTTONS) -->
+  <!-- MINIMALIST WINNER SPOTLIGHT OVERLAY (CONFIRM: ENTER / CANCEL: BACKSPACE) -->
   <div class="modal-backdrop" id="winnerModal">
     <div class="modal-dialog winner-minimal-modal">
       <div class="winner-minimal-header">WINNER ANNOUNCEMENT</div>
@@ -1567,8 +1683,9 @@
         </div>
       </div>
 
+      <!-- KEYBOARD CONTROLS HINT -->
       <div class="overlay-key-hint">
-        Press <kbd>ENTER</kbd> to continue
+        Press <kbd>ENTER</kbd> to confirm or <kbd>BACKSPACE</kbd> to cancel
       </div>
     </div>
   </div>
@@ -1651,6 +1768,8 @@
     const state = {
       isAdminLoggedIn: false,
       sheetUrl: localStorage.getItem('dnd_sheet_url') || DEFAULT_SHEET_URL,
+      spinDuration: parseInt(localStorage.getItem('dnd_spin_duration'), 10) || 15,
+      historyPanelOpen: localStorage.getItem('dnd_history_open') !== 'false',
       participants: [],
       remainingPool: [],
       winners: [],
@@ -1660,7 +1779,7 @@
       spinPhase: 'IDLE', // 'IDLE', 'ACCEL', 'CRUISE', 'DECEL', 'SETTLE'
       sfxEnabled: true,
       bgmPlaying: false,
-      winnerPending: null
+      pendingWinner: null // { participant, prize, record }
     };
 
     /* =====================================================================
@@ -1976,7 +2095,7 @@
         showToast('Admin access granted.');
       } else {
         dialog.classList.remove('shake');
-        void dialog.offsetWidth; // trigger reflow
+        void dialog.offsetWidth;
         dialog.classList.add('shake');
         showToast('Access Denied: Invalid Admin ID or Password.');
       }
@@ -2053,6 +2172,11 @@
     function initData() {
       document.getElementById('sheetUrlInput').value = state.sheetUrl;
 
+      // Spin Duration
+      document.getElementById('cfgSpinDuration').value = state.spinDuration;
+      document.getElementById('numSpinDuration').value = state.spinDuration;
+      document.getElementById('labelSpinDuration').textContent = `${state.spinDuration}s`;
+
       // Load Prizes
       const savedPrizes = localStorage.getItem('dnd_prizes');
       if (savedPrizes) {
@@ -2085,11 +2209,13 @@
 
       updateRemainingPool();
       loadScreenConfiguration();
+      loadPanelPositionsAndSizes();
       renderPrizesUI();
       renderWinnersUI();
       updateActivePrizeUI();
       updateStatsUI();
       setupVirtualDrumDOM();
+      applyHistoryPanelVisibility(state.historyPanelOpen);
     }
 
     function updateRemainingPool() {
@@ -2103,6 +2229,8 @@
       document.getElementById('statWinnersDrawn').textContent = state.winners.length;
       document.getElementById('poolStatusText').textContent = `${state.remainingPool.length} In Pool`;
       document.getElementById('historyCountBadge').textContent = state.winners.length;
+      document.getElementById('rightEdgeCount').textContent = `WINNERS (${state.winners.length})`;
+      document.getElementById('dockWinnerCount').textContent = `Winners (${state.winners.length})`;
     }
 
     async function syncGoogleSheet(showToasts = true) {
@@ -2162,66 +2290,262 @@
     }
 
     /* =====================================================================
-       SCREEN RESOLUTION & SCALE CALIBRATION
+       STAGE CONFIGURATION & DRAGGABLE / RESIZABLE PANELS
        ===================================================================== */
     function loadScreenConfiguration() {
-      const savedConfig = localStorage.getItem('dnd_screen_config');
+      const savedConfig = localStorage.getItem('dnd_stage_config');
       if (savedConfig) {
         try {
           const cfg = JSON.parse(savedConfig);
-          applyScreenConfig(cfg.scale, cfg.width, cfg.height, cfg.spinLeft, cfg.historyRight, false);
+          applyStageConfig(cfg.scale, cfg.width, cfg.height, false);
           return;
         } catch (e) {}
       }
-      applyScreenConfig(100, '', '', 40, 24, false);
+      applyStageConfig(100, '', '', false);
     }
 
-    function applyScreenConfig(scale, width, height, spinLeft, historyRight, save = true) {
+    function applyStageConfig(scale, width, height, save = true) {
       document.getElementById('cfgStageScale').value = scale;
       document.getElementById('labelStageScale').textContent = `${scale}%`;
       document.getElementById('cfgStageWidth').value = width || '';
       document.getElementById('cfgStageHeight').value = height || '';
-      document.getElementById('cfgSpinLeft').value = spinLeft;
-      document.getElementById('labelSpinLeft').textContent = `${spinLeft}px`;
-      document.getElementById('cfgHistoryRight').value = historyRight;
-      document.getElementById('labelHistoryRight').textContent = `${historyRight}px`;
 
       document.documentElement.style.setProperty('--stage-scale', scale / 100);
       document.documentElement.style.setProperty('--stage-max-width', width ? `${width}px` : '100vw');
       document.documentElement.style.setProperty('--stage-max-height', height ? `${height}px` : '100vh');
-      document.documentElement.style.setProperty('--spin-left', `${spinLeft}px`);
-      document.documentElement.style.setProperty('--history-right', `${historyRight}px`);
 
       if (save) {
-        localStorage.setItem('dnd_screen_config', JSON.stringify({
-          scale, width, height, spinLeft, historyRight
-        }));
-        showToast('Screen configuration applied.');
+        localStorage.setItem('dnd_stage_config', JSON.stringify({ scale, width, height }));
+        showToast('Stage configuration saved.');
       }
     }
+
+    // Spin Duration input listeners
+    const cfgDurationSlider = document.getElementById('cfgSpinDuration');
+    const numDurationInput = document.getElementById('numSpinDuration');
+    const labelDuration = document.getElementById('labelSpinDuration');
+
+    cfgDurationSlider.oninput = (e) => {
+      const val = parseInt(e.target.value, 10);
+      numDurationInput.value = val;
+      labelDuration.textContent = `${val}s`;
+      state.spinDuration = val;
+      localStorage.setItem('dnd_spin_duration', val);
+    };
+
+    numDurationInput.oninput = (e) => {
+      let val = parseInt(e.target.value, 10) || 15;
+      val = Math.max(3, Math.min(60, val));
+      cfgDurationSlider.value = val;
+      labelDuration.textContent = `${val}s`;
+      state.spinDuration = val;
+      localStorage.setItem('dnd_spin_duration', val);
+    };
 
     document.getElementById('cfgStageScale').oninput = (e) => {
       document.getElementById('labelStageScale').textContent = `${e.target.value}%`;
     };
-    document.getElementById('cfgSpinLeft').oninput = (e) => {
-      document.getElementById('labelSpinLeft').textContent = `${e.target.value}px`;
-    };
-    document.getElementById('cfgHistoryRight').oninput = (e) => {
-      document.getElementById('labelHistoryRight').textContent = `${e.target.value}px`;
-    };
 
-    document.getElementById('btnApplyScreenConfig').onclick = () => {
+    document.getElementById('btnApplyStageConfig').onclick = () => {
       const scale = parseInt(document.getElementById('cfgStageScale').value, 10) || 100;
       const width = document.getElementById('cfgStageWidth').value.trim();
       const height = document.getElementById('cfgStageHeight').value.trim();
-      const spinLeft = parseInt(document.getElementById('cfgSpinLeft').value, 10) || 40;
-      const historyRight = parseInt(document.getElementById('cfgHistoryRight').value, 10) || 24;
-      applyScreenConfig(scale, width, height, spinLeft, historyRight, true);
+      applyStageConfig(scale, width, height, true);
     };
 
-    document.getElementById('btnResetScreenConfig').onclick = () => {
-      applyScreenConfig(100, '', '', 40, 24, true);
+    /* DRAG & RESIZE ENGINE FOR BOTH PANELS */
+    function makeElementDraggableAndResizable(element, dragHandle, resizeHandle, storageKeyPos, storageKeySize, minW, maxW, minH, maxH) {
+      // 1. DRAGGING LOGIC
+      dragHandle.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        e.preventDefault();
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const rect = element.getBoundingClientRect();
+        const initialLeft = rect.left;
+        const initialTop = rect.top;
+
+        element.style.transform = 'none'; // Clear translate(-50%) once dragged
+
+        function onMouseMove(moveEvent) {
+          const dx = moveEvent.clientX - startX;
+          const dy = moveEvent.clientY - startY;
+
+          let newLeft = initialLeft + dx;
+          let newTop = initialTop + dy;
+
+          // Viewport bounding
+          const maxLeft = window.innerWidth - element.offsetWidth - 10;
+          const maxTop = window.innerHeight - element.offsetHeight - 10;
+          newLeft = Math.max(10, Math.min(maxLeft, newLeft));
+          newTop = Math.max(10, Math.min(maxTop, newTop));
+
+          element.style.left = `${newLeft}px`;
+          element.style.top = `${newTop}px`;
+          element.style.right = 'auto';
+        }
+
+        function onMouseUp() {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          const finalRect = element.getBoundingClientRect();
+          localStorage.setItem(storageKeyPos, JSON.stringify({ left: finalRect.left, top: finalRect.top }));
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+
+      // 2. RESIZING LOGIC
+      resizeHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startW = element.offsetWidth;
+        const startH = element.offsetHeight;
+
+        function onMouseMove(moveEvent) {
+          const dx = moveEvent.clientX - startX;
+          const dy = moveEvent.clientY - startY;
+
+          let newW = startW + dx;
+          let newH = startH + dy;
+
+          newW = Math.max(minW, Math.min(maxW, newW));
+          newH = Math.max(minH, Math.min(maxH, newH));
+
+          element.style.width = `${newW}px`;
+          element.style.height = `${newH}px`;
+        }
+
+        function onMouseUp() {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          localStorage.setItem(storageKeySize, JSON.stringify({ width: element.offsetWidth, height: element.offsetHeight }));
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+    }
+
+    function loadPanelPositionsAndSizes() {
+      const spin = document.getElementById('spinContainer');
+      const history = document.getElementById('winnerHistoryPanel');
+
+      // Spin Position
+      const savedSpinPos = localStorage.getItem('dnd_spin_pos');
+      if (savedSpinPos) {
+        try {
+          const pos = JSON.parse(savedSpinPos);
+          spin.style.left = `${pos.left}px`;
+          spin.style.top = `${pos.top}px`;
+          spin.style.transform = 'none';
+        } catch (e) {}
+      }
+
+      // Spin Size
+      const savedSpinSize = localStorage.getItem('dnd_spin_size');
+      if (savedSpinSize) {
+        try {
+          const sz = JSON.parse(savedSpinSize);
+          spin.style.width = `${sz.width}px`;
+        } catch (e) {}
+      }
+
+      // History Position
+      const savedHistPos = localStorage.getItem('dnd_history_pos');
+      if (savedHistPos) {
+        try {
+          const pos = JSON.parse(savedHistPos);
+          history.style.left = `${pos.left}px`;
+          history.style.top = `${pos.top}px`;
+          history.style.right = 'auto';
+        } catch (e) {}
+      }
+
+      // History Size
+      const savedHistSize = localStorage.getItem('dnd_history_size');
+      if (savedHistSize) {
+        try {
+          const sz = JSON.parse(savedHistSize);
+          history.style.width = `${sz.width}px`;
+          history.style.height = `${sz.height}px`;
+        } catch (e) {}
+      }
+
+      // Bind Draggable & Resizable handlers
+      makeElementDraggableAndResizable(
+        spin,
+        document.getElementById('spinDragBar'),
+        document.getElementById('spinResizeHandle'),
+        'dnd_spin_pos',
+        'dnd_spin_size',
+        360, 750, 480, 880
+      );
+
+      makeElementDraggableAndResizable(
+        history,
+        document.getElementById('historyDragBar'),
+        document.getElementById('historyResizeHandle'),
+        'dnd_history_pos',
+        'dnd_history_size',
+        260, 600, 360, window.innerHeight * 0.95
+      );
+    }
+
+    document.getElementById('btnResetPanelPositions').onclick = () => {
+      localStorage.removeItem('dnd_spin_pos');
+      localStorage.removeItem('dnd_spin_size');
+      localStorage.removeItem('dnd_history_pos');
+      localStorage.removeItem('dnd_history_size');
+
+      const spin = document.getElementById('spinContainer');
+      spin.style.left = 'clamp(24px, 4.5vw, 85px)';
+      spin.style.top = '50%';
+      spin.style.transform = 'translateY(-50%)';
+      spin.style.width = 'clamp(380px, 32vw, 520px)';
+      spin.style.height = 'auto';
+
+      const history = document.getElementById('winnerHistoryPanel');
+      history.style.left = 'auto';
+      history.style.right = 'clamp(16px, 2vw, 32px)';
+      history.style.top = 'clamp(16px, 2.5vh, 28px)';
+      history.style.width = 'clamp(280px, 20vw, 360px)';
+      history.style.height = 'calc(100vh - clamp(32px, 5vh, 56px))';
+
+      showToast('Panel positions and sizes reset.');
     };
+
+    /* =====================================================================
+       HIDEABLE / COLLAPSIBLE WINNER HISTORY PANEL
+       ===================================================================== */
+    function applyHistoryPanelVisibility(open) {
+      state.historyPanelOpen = open;
+      localStorage.setItem('dnd_history_open', open);
+      const panel = document.getElementById('winnerHistoryPanel');
+      const toggleIcon = document.getElementById('historyToggleIcon');
+
+      if (open) {
+        panel.classList.remove('collapsed');
+        toggleIcon.innerHTML = '<polyline points="9 18 15 12 9 6"/>';
+      } else {
+        panel.classList.add('collapsed');
+        toggleIcon.innerHTML = '<polyline points="15 18 9 12 15 6"/>';
+      }
+    }
+
+    function toggleHistoryPanel() {
+      applyHistoryPanelVisibility(!state.historyPanelOpen);
+      showToast(state.historyPanelOpen ? 'Winners Panel Visible' : 'Winners Panel Hidden');
+    }
+
+    document.getElementById('rightHistoryToggleBtn').onclick = toggleHistoryPanel;
+    document.getElementById('btnToggleHistoryDock').onclick = toggleHistoryPanel;
+    document.getElementById('btnCollapseHistory').onclick = () => applyHistoryPanelVisibility(false);
 
     /* =====================================================================
        PRIZE MANAGEMENT
@@ -2505,27 +2829,26 @@
     document.getElementById('btnExportCsv').onclick = exportWinnersCSV;
 
     /* =====================================================================
-       ADVANCED INFINITE VIRTUAL CAROUSEL & 15-SEC SUSPENSE SPIN ENGINE
+       ADVANCED INFINITE VIRTUAL CAROUSEL & CONFIGURABLE SUSPENSE SPIN ENGINE
        ===================================================================== */
-    const ITEM_HEIGHT = 96; // Height of each card in pixels
+    const ITEM_HEIGHT = 96;
     const VIRTUAL_CARD_COUNT = 6;
     let virtualCardElements = [];
 
     let currentY = 0;
     let velocity = 0;
-    const MAX_VELOCITY = 2600; // px/sec
+    const MAX_VELOCITY = 2600;
     let spinStartTime = 0;
     let lastTickCardIndex = -1;
     let animFrame = null;
 
-    // Deceleration & Target variables
     let targetWinner = null;
     let targetIndex = -1;
     let targetY = 0;
     let decelStartY = 0;
     let decelDistance = 0;
     let decelStartTime = 0;
-    let decelDuration = 6.5; // seconds
+    let decelDuration = 6.5;
     let isManualStop = false;
 
     function setupVirtualDrumDOM() {
@@ -2559,7 +2882,6 @@
         return targetWinner;
       }
 
-      // Avoid showing the target winner on immediate neighboring cards
       if (targetWinner && Math.abs(index - targetIndex) <= 3) {
         const altPool = pool.filter(p => p !== targetWinner);
         const source = altPool.length > 0 ? altPool : pool;
@@ -2614,7 +2936,6 @@
 
       audio.init();
 
-      // Pick winner upfront
       const winnerIndex = Math.floor(Math.random() * state.remainingPool.length);
       targetWinner = state.remainingPool[winnerIndex];
 
@@ -2626,7 +2947,11 @@
       isManualStop = false;
       targetIndex = -1;
 
-      // Update UI button
+      // Calculate deceleration trigger timing based on user-configured spinDuration
+      const totalDuration = state.spinDuration;
+      const plannedDecelDuration = Math.min(Math.max(totalDuration * 0.42, 2.5), 7.0);
+      const decelTriggerTime = Math.max(totalDuration - plannedDecelDuration, 1.2);
+
       const spinBtn = document.getElementById('btnSpinMain');
       spinBtn.classList.add('is-spinning');
       document.getElementById('spinBtnText').textContent = 'STOP SPIN';
@@ -2641,39 +2966,36 @@
         const elapsed = (now - spinStartTime) / 1000;
 
         if (state.spinPhase === 'ACCEL') {
-          velocity += 2000 * dt;
+          velocity += 2200 * dt;
           if (velocity >= MAX_VELOCITY) {
             velocity = MAX_VELOCITY;
             state.spinPhase = 'CRUISE';
           }
           currentY += velocity * dt;
 
-          // 15-SECOND SUSPENSE: After 8.5s of spin, begin natural 6.5s progressive deceleration
-          if (elapsed >= 8.5 && !isManualStop) {
-            initiateDeceleration(6.5);
+          if (elapsed >= decelTriggerTime && !isManualStop) {
+            initiateDeceleration(plannedDecelDuration);
           }
         } else if (state.spinPhase === 'CRUISE') {
           currentY += velocity * dt;
 
-          // 15-SECOND SUSPENSE
-          if (elapsed >= 8.5 && !isManualStop) {
-            initiateDeceleration(6.5);
+          if (elapsed >= decelTriggerTime && !isManualStop) {
+            initiateDeceleration(plannedDecelDuration);
           }
         } else if (state.spinPhase === 'DECEL') {
           const decelElapsed = (now - decelStartTime) / 1000;
           const progress = Math.min(decelElapsed / decelDuration, 1);
 
-          // Custom suspense easing curve (starts fast, gradually and suspensefully slows down)
+          // Suspense easing curve
           const easeProgress = 1 - Math.pow(1 - progress, 2.6);
           currentY = decelStartY + (decelDistance * easeProgress);
 
           if (progress >= 1) {
-            currentY = targetY; // MATHEMATICAL EXACT CENTER
+            currentY = targetY; // EXACT CENTER ALIGNMENT
             state.spinPhase = 'SETTLE';
           }
         }
 
-        // Mechanical tick sound as center boundary crosses each card
         const currentCardIndex = Math.floor((currentY + (ITEM_HEIGHT / 2)) / ITEM_HEIGHT);
         if (currentCardIndex !== lastTickCardIndex) {
           const speedRatio = Math.max(velocity / MAX_VELOCITY, 0.1);
@@ -2701,13 +3023,12 @@
       decelStartTime = performance.now();
       decelStartY = currentY;
 
-      // Calculate required distance so that targetIndex lands mathematically centered:
-      // In 288px viewport, center slot is at top 96px.
-      // So target card at targetIndex is at 96px when currentY = (targetIndex - 1) * ITEM_HEIGHT.
+      // Viewport is 288px. Highlight center is top 96px to 192px (center 144px).
+      // When currentY = (targetIndex - 1) * ITEM_HEIGHT, target card lands exactly at top 96px!
       const currentFloatIndex = currentY / ITEM_HEIGHT;
-      const estimatedCardsToPass = Math.max(Math.round((velocity * duration * 0.45) / ITEM_HEIGHT), 14);
+      const estimatedCardsToPass = Math.max(Math.round((velocity * duration * 0.45) / ITEM_HEIGHT), 12);
       targetIndex = Math.ceil(currentFloatIndex) + estimatedCardsToPass;
-      targetY = (targetIndex - 1) * ITEM_HEIGHT; // EXACT MATHEMATICAL CENTER ALIGNMENT
+      targetY = (targetIndex - 1) * ITEM_HEIGHT;
       decelDistance = targetY - decelStartY;
     }
 
@@ -2716,19 +3037,17 @@
       if (state.spinPhase === 'DECEL' && isManualStop) return;
 
       isManualStop = true;
-      // Instant manual override: swift 1.5-second deceleration to lock winner immediately
-      initiateDeceleration(1.5);
+      // Instant manual override: swift ~1.4-second deceleration
+      initiateDeceleration(1.4);
     }
 
     function finishSpin() {
       state.isSpinning = false;
       state.spinPhase = 'IDLE';
 
-      // Ensure mathematical perfection
       currentY = targetY;
       renderVirtualCards(currentY);
 
-      // Tactile lock sound & visual gold frame lock
       audio.playLatch();
       document.getElementById('slotTargetFrame').classList.add('winner-locked');
 
@@ -2737,19 +3056,43 @@
       document.getElementById('spinBtnText').textContent = 'START SPIN';
       document.getElementById('spinTipText').textContent = 'Press SPACE to spin / stop';
 
-      // Celebration fanfare & fireworks
+      const winner = targetWinner;
+      const prize = getActivePrize();
+
+      // Formulate winner record
+      const record = {
+        id: winner.id,
+        name: winner.name,
+        dept: winner.dept,
+        division: winner.division,
+        displayDept: winner.displayDept,
+        prizeName: prize.name,
+        prizeTier: prize.tier,
+        time: new Date().toLocaleTimeString()
+      };
+
+      // Add to winners & decrement prize
+      state.winners.unshift(record);
+      if (prize.remaining > 0) prize.remaining--;
+      updateRemainingPool();
+      updateStatsUI();
+      renderWinnersUI();
+      updateActivePrizeUI();
+
+      // Store pending winner for Confirm/Cancel controls
+      state.pendingWinner = { participant: winner, prize: prize, record: record };
+
       setTimeout(() => {
         audio.playFanfare();
         celebration.burst();
-        showWinnerSpotlight(targetWinner);
+        showWinnerSpotlight(winner);
       }, 250);
     }
 
     /* =====================================================================
-       MINIMALIST WINNER SPOTLIGHT (STRICTLY NO BUTTONS)
+       WINNER SPOTLIGHT & KEYBOARD CONTROLS (CONFIRM: ENTER / CANCEL: BACKSPACE)
        ===================================================================== */
     function showWinnerSpotlight(winner) {
-      state.winnerPending = winner;
       const prize = getActivePrize();
 
       document.getElementById('modalWinnerName').textContent = winner.name;
@@ -2765,45 +3108,20 @@
       document.getElementById('winnerModal').classList.add('open');
     }
 
-    function dismissWinnerOverlay() {
+    // 1. CONFIRM WINNER (ENTER KEY)
+    function confirmWinner() {
       const modal = document.getElementById('winnerModal');
-      if (!modal.classList.contains('open') || !state.winnerPending) return;
+      if (!modal.classList.contains('open') || !state.pendingWinner) return;
 
-      const winner = state.winnerPending;
-      const prize = getActivePrize();
-
-      // Record winner to history
-      const record = {
-        id: winner.id,
-        name: winner.name,
-        dept: winner.dept,
-        division: winner.division,
-        displayDept: winner.displayDept,
-        prizeName: prize.name,
-        prizeTier: prize.tier,
-        time: new Date().toLocaleTimeString()
-      };
-
-      state.winners.unshift(record);
-      localStorage.setItem('dnd_winners', JSON.stringify(state.winners));
-
-      // Decrement prize remaining
-      if (prize.remaining > 0) {
-        prize.remaining--;
-        localStorage.setItem('dnd_prizes', JSON.stringify(state.prizes));
-      }
-
-      // Remove winner from remaining pool
-      updateRemainingPool();
-      updateStatsUI();
-      renderWinnersUI();
-      updateActivePrizeUI();
-
+      const { participant, prize } = state.pendingWinner;
       modal.classList.remove('open');
-      state.winnerPending = null;
-      showToast(`Winner confirmed: ${winner.name}.`);
+      state.pendingWinner = null;
+      localStorage.setItem('dnd_winners', JSON.stringify(state.winners));
+      localStorage.setItem('dnd_prizes', JSON.stringify(state.prizes));
 
-      // Auto advance to next prize if depleted
+      showToast(`Winner confirmed: ${participant.name}.`);
+
+      // Auto advance to next prize if current is depleted
       if (prize.remaining <= 0) {
         const nextPrize = state.prizes.find(p => p.remaining > 0);
         if (nextPrize) {
@@ -2816,25 +3134,59 @@
       }
     }
 
-    // Click anywhere on overlay to dismiss as well
+    // 2. CANCEL WINNER (BACKSPACE KEY)
+    function cancelWinner() {
+      const modal = document.getElementById('winnerModal');
+      if (!modal.classList.contains('open') || !state.pendingWinner) return;
+
+      const { participant, prize, record } = state.pendingWinner;
+
+      // Undo winner assignment:
+      // Remove from winners list
+      state.winners = state.winners.filter(item => item !== record);
+      localStorage.setItem('dnd_winners', JSON.stringify(state.winners));
+
+      // Restore prize remaining count
+      if (prize.remaining < prize.quantity) {
+        prize.remaining++;
+        localStorage.setItem('dnd_prizes', JSON.stringify(state.prizes));
+      }
+
+      // Restore participant to eligible pool
+      updateRemainingPool();
+      updateStatsUI();
+      renderWinnersUI();
+      updateActivePrizeUI();
+      renderVirtualCards(currentY);
+
+      modal.classList.remove('open');
+      state.pendingWinner = null;
+
+      showToast(`Winner canceled. ${participant.name} returned to pool.`);
+    }
+
+    // Click anywhere on overlay to confirm as well
     document.getElementById('winnerModal').onclick = (e) => {
-      dismissWinnerOverlay();
+      confirmWinner();
     };
 
     /* =====================================================================
-       KEYBOARD CONTROLS (SPACEBAR TOGGLE & ENTER DISMISS)
+       GLOBAL KEYBOARD CONTROLS
        ===================================================================== */
     window.addEventListener('keydown', (e) => {
-      // If typing in input, ignore
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
         return;
       }
 
-      // ENTER KEY: Confirms winner and dismisses overlay
-      if (e.key === 'Enter') {
-        if (document.getElementById('winnerModal').classList.contains('open')) {
+      // WINNER OVERLAY CONTROLS
+      if (document.getElementById('winnerModal').classList.contains('open')) {
+        if (e.key === 'Enter') {
           e.preventDefault();
-          dismissWinnerOverlay();
+          confirmWinner();
+          return;
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          cancelWinner();
           return;
         }
       }
@@ -2843,13 +3195,11 @@
       if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
 
-        // If winner overlay is open, dismiss it
         if (document.getElementById('winnerModal').classList.contains('open')) {
-          dismissWinnerOverlay();
+          confirmWinner();
           return;
         }
 
-        // If prize reveal is open, close it
         if (document.getElementById('prizeRevealModal').classList.contains('open')) {
           document.getElementById('prizeRevealModal').classList.remove('open');
         }
@@ -2862,7 +3212,9 @@
       }
 
       // HOTKEYS
-      if (e.key === 's' || e.key === 'S') {
+      if (e.key === 'w' || e.key === 'W') {
+        toggleHistoryPanel();
+      } else if (e.key === 's' || e.key === 'S') {
         checkAdminAccess();
       } else if (e.key === 'p' || e.key === 'P') {
         showPrizeRevealModal();
@@ -3043,6 +3395,7 @@
       Modal.confirm('Factory Reset', 'Clear ALL custom prizes, winner history, and settings back to factory defaults?', () => {
         localStorage.clear();
         state.sheetUrl = DEFAULT_SHEET_URL;
+        state.spinDuration = 15;
         state.prizes = [...EMBEDDED_DEFAULT_PRIZES];
         state.activePrizeId = state.prizes[0].id;
         state.winners = [];
