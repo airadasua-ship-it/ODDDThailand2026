@@ -1090,21 +1090,144 @@
       color: #fff;
     }
 
-    /* PRIZE MANAGER CARDS */
+    /* PRIZE MANAGER & DRAG-AND-DROP SEQUENCE */
+    .prize-summary-banner {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 10px;
+      margin-bottom: 14px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.45);
+    }
+    .summary-metric-card {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .summary-metric-card.highlight {
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      padding-left: 12px;
+    }
+    .summary-metric-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .summary-metric-val {
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: #ffd700;
+      letter-spacing: 0.02em;
+    }
+    .summary-metric-card.highlight .summary-metric-val {
+      color: #fde68a;
+    }
+
     .prize-item-row {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       background: rgba(15, 23, 42, 0.65);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: var(--radius-md);
-      padding: 10px 14px;
-      transition: all 0.2s;
+      padding: 10px 12px;
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
     }
     .prize-item-row.is-active {
       border-color: #ffd700;
       background: rgba(245, 158, 11, 0.12);
       box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
+    }
+    .prize-item-row.is-dragging {
+      opacity: 0.4;
+      border: 1.5px dashed #ffd700 !important;
+      background: rgba(245, 158, 11, 0.08) !important;
+      box-shadow: 0 8px 24px rgba(255, 215, 0, 0.25);
+      transform: scale(0.98);
+    }
+    .prize-item-row.drop-above {
+      border-top: 2.5px solid #ffd700 !important;
+      box-shadow: 0 -4px 14px rgba(255, 215, 0, 0.4);
+      transform: translateY(-2px);
+    }
+    .prize-item-row.drop-below {
+      border-bottom: 2.5px solid #ffd700 !important;
+      box-shadow: 0 4px 14px rgba(255, 215, 0, 0.4);
+      transform: translateY(2px);
+    }
+
+    .prize-drag-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 36px;
+      color: #94a3b8;
+      opacity: 0.5;
+      cursor: grab;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .prize-item-row:hover .prize-drag-handle {
+      opacity: 0.85;
+      color: #ffd700;
+    }
+    .prize-drag-handle:hover {
+      opacity: 1 !important;
+      color: #ffd700 !important;
+      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+    }
+    .prize-item-row.is-dragging .prize-drag-handle {
+      cursor: grabbing;
+    }
+
+    .prize-order-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      height: 34px;
+      padding: 0 4px;
+      background: rgba(245, 158, 11, 0.14);
+      border: 1.5px solid rgba(255, 215, 0, 0.55);
+      border-radius: var(--radius-sm);
+      color: #ffd700;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.15);
+    }
+
+    .stage-prize-dropdown {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: var(--radius-sm);
+      color: #ffd700;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      max-width: 150px;
+    }
+    .stage-prize-dropdown:hover, .stage-prize-dropdown:focus {
+      border-color: #ffd700;
+      background: rgba(15, 23, 42, 0.95);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    }
+    .stage-prize-dropdown option {
+      background: #0f172a;
+      color: #fff;
     }
     .prize-item-thumb {
       width: 48px;
@@ -1435,9 +1558,16 @@
           <div class="prize-info-left">
             <img src="" alt="Prize" class="prize-thumb-mini" id="activePrizeThumb">
             <div class="prize-text-wrap">
-              <span class="prize-tier-badge" id="activePrizeTier">GRAND PRIZE</span>
-              <span class="prize-title-display" id="activePrizeTitle">MacBook Pro 16"</span>
-              <span class="prize-remain-badge" id="activePrizeRemaining">1 of 1 remaining</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="prize-tier-badge" id="activePrizeTier">GRAND PRIZE</span>
+                <span class="prize-remain-badge" id="activePrizeRemaining">1 of 1 remaining</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
+                <span class="prize-title-display" id="activePrizeTitle">MacBook Pro 16"</span>
+                <select class="stage-prize-dropdown" id="stagePrizeSelect" title="Select Active Draw Prize">
+                  <!-- Dynamically populated by renderPrizeSelect() -->
+                </select>
+              </div>
             </div>
           </div>
           <button class="btn-reveal-prize" id="btnRevealPrizeQuick">
@@ -1678,14 +1808,29 @@
 
       <!-- TAB: PRIZE MANAGER -->
       <div class="tab-content" id="tab-prizes" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 0.82rem; font-weight: 700; color: #ffd700;">Prizes List</span>
-          <button class="btn-primary" id="btnAddPrize" style="padding: 5px 12px; font-size: 0.78rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: #ffd700; letter-spacing: 0.05em;">Draw Sequence & Prizes</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Drag items to reorder the draw sequence</div>
+          </div>
+          <button class="btn-primary" id="btnAddPrize" style="padding: 6px 14px; font-size: 0.78rem;">
             Add Prize
           </button>
         </div>
 
-        <div id="prizeListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- TOTAL SUMMARY METRICS BANNER -->
+        <div class="prize-summary-banner" id="prizeSummaryBanner">
+          <div class="summary-metric-card">
+            <span class="summary-metric-label">ประเภทรางวัลทั้งหมด</span>
+            <span class="summary-metric-val" id="metricTotalPrizeTypes">0 รายการ</span>
+          </div>
+          <div class="summary-metric-card highlight">
+            <span class="summary-metric-label">จำนวนชิ้นทั้งหมด</span>
+            <span class="summary-metric-val" id="metricTotalPrizeUnits">รวม 0 รางวัล (เหลือ 0/0 ชิ้น)</span>
+          </div>
+        </div>
+
+        <div id="prizeListContainer" style="display: flex; flex-direction: column; gap: 8px;">
           <!-- Dynamically populated -->
         </div>
       </div>
@@ -2773,34 +2918,141 @@
     document.getElementById('btnCollapseHistory').onclick = () => applyHistoryPanelVisibility(false);
 
     /* =====================================================================
-       PRIZE MANAGEMENT
+       PRIZE MANAGEMENT, DRAG-AND-DROP REORDERING & DRAW SEQUENCE
        ===================================================================== */
+    let draggedPrizeIndex = null;
+
     function getActivePrize() {
       return state.prizes.find(p => p.id === state.activePrizeId) || state.prizes[0] || null;
+    }
+
+    function updatePrizeSummaryMetrics() {
+      const totalTypes = state.prizes.length;
+      let totalQty = 0;
+      let totalRemaining = 0;
+
+      state.prizes.forEach(p => {
+        totalQty += (parseInt(p.quantity, 10) || 0);
+        totalRemaining += (parseInt(p.remaining, 10) || 0);
+      });
+
+      const typesEl = document.getElementById('metricTotalPrizeTypes');
+      if (typesEl) {
+        typesEl.textContent = `${totalTypes} รายการ`;
+      }
+
+      const unitsEl = document.getElementById('metricTotalPrizeUnits');
+      if (unitsEl) {
+        unitsEl.textContent = `รวม ${totalQty} รางวัล (เหลือ ${totalRemaining}/${totalQty} ชิ้น)`;
+      }
+    }
+
+    function renderPrizeSelect() {
+      const select = document.getElementById('stagePrizeSelect');
+      if (!select) return;
+
+      select.innerHTML = '';
+      state.prizes.forEach((p, idx) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `#${idx + 1} - ${p.name} (${p.remaining}/${p.quantity})`;
+        if (p.id === state.activePrizeId) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+
+      select.onchange = (e) => {
+        state.activePrizeId = e.target.value;
+        localStorage.setItem('dnd_active_prize_id', state.activePrizeId);
+        updateActivePrizeUI();
+        renderPrizesUI();
+        const p = getActivePrize();
+        if (p) showToast(`Active Prize: #${state.prizes.indexOf(p) + 1} ${p.name}`);
+      };
     }
 
     function updateActivePrizeUI() {
       const prize = getActivePrize();
       if (!prize) return;
 
-      document.getElementById('activePrizeTier').textContent = prize.tier.toUpperCase();
-      document.getElementById('activePrizeTitle').textContent = prize.name;
-      document.getElementById('activePrizeRemaining').textContent = `${prize.remaining} of ${prize.quantity} remaining`;
-      document.getElementById('activePrizeThumb').src = prize.image;
+      const tierEl = document.getElementById('activePrizeTier');
+      if (tierEl) tierEl.textContent = prize.tier.toUpperCase();
 
-      document.getElementById('dockPrizeTier').textContent = prize.tier.toUpperCase();
-      document.getElementById('dockPrizeName').textContent = prize.name;
+      const titleEl = document.getElementById('activePrizeTitle');
+      if (titleEl) titleEl.textContent = prize.name;
+
+      const remainEl = document.getElementById('activePrizeRemaining');
+      if (remainEl) remainEl.textContent = `${prize.remaining} of ${prize.quantity} remaining`;
+
+      const thumbEl = document.getElementById('activePrizeThumb');
+      if (thumbEl) thumbEl.src = prize.image;
+
+      const dockTierEl = document.getElementById('dockPrizeTier');
+      if (dockTierEl) dockTierEl.textContent = prize.tier.toUpperCase();
+
+      const dockNameEl = document.getElementById('dockPrizeName');
+      if (dockNameEl) dockNameEl.textContent = prize.name;
+
+      renderPrizeSelect();
+    }
+
+    function reorderPrizes(fromIndex, targetIndex, insertBefore) {
+      if (fromIndex === targetIndex) return;
+
+      const item = state.prizes[fromIndex];
+      if (!item) return;
+
+      // Extract item from old position
+      state.prizes.splice(fromIndex, 1);
+
+      // Calculate target placement in modified array
+      let newIdx = targetIndex;
+      if (fromIndex < targetIndex) {
+        newIdx = insertBefore ? targetIndex - 1 : targetIndex;
+      } else {
+        newIdx = insertBefore ? targetIndex : targetIndex + 1;
+      }
+      newIdx = Math.max(0, Math.min(state.prizes.length, newIdx));
+
+      // Insert at new position
+      state.prizes.splice(newIdx, 0, item);
+
+      // Persist to localStorage immediately
+      localStorage.setItem('dnd_prizes', JSON.stringify(state.prizes));
+
+      // Re-render prize manager UI and sync stage console dropdown
+      renderPrizesUI();
+      updateActivePrizeUI();
+
+      showToast(`Draw order updated: #${newIdx + 1} ${item.name}`);
     }
 
     function renderPrizesUI() {
       const container = document.getElementById('prizeListContainer');
+      if (!container) return;
       container.innerHTML = '';
 
-      state.prizes.forEach((prize) => {
+      updatePrizeSummaryMetrics();
+
+      state.prizes.forEach((prize, idx) => {
         const isActive = prize.id === state.activePrizeId;
+        const orderNum = idx + 1;
         const row = document.createElement('div');
         row.className = `prize-item-row ${isActive ? 'is-active' : ''}`;
+        row.draggable = true;
+        row.dataset.index = idx;
         row.innerHTML = `
+          <div class="prize-drag-handle" title="Drag to reorder sequence">
+            <svg viewBox="0 0 10 16" width="10" height="16" fill="currentColor">
+              <circle cx="3" cy="3" r="1.5"/><circle cx="7" cy="3" r="1.5"/>
+              <circle cx="3" cy="8" r="1.5"/><circle cx="7" cy="8" r="1.5"/>
+              <circle cx="3" cy="13" r="1.5"/><circle cx="7" cy="13" r="1.5"/>
+            </svg>
+          </div>
+          <div class="prize-order-badge" title="Draw Sequence #${orderNum}">
+            #${orderNum}
+          </div>
           <img src="${prize.image}" alt="${prize.name}" class="prize-item-thumb">
           <div class="prize-item-info">
             <div class="prize-item-title">${prize.name}</div>
@@ -2822,17 +3074,73 @@
           </div>
         `;
 
-        row.querySelector('.btn-select-prize').onclick = () => {
+        // HTML5 DRAG & DROP EVENTS WITH POSITION INDICATORS
+        row.addEventListener('dragstart', (e) => {
+          if (e.target.closest('button') || e.target.closest('input')) {
+            e.preventDefault();
+            return;
+          }
+          draggedPrizeIndex = idx;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(idx));
+          setTimeout(() => row.classList.add('is-dragging'), 0);
+        });
+
+        row.addEventListener('dragend', () => {
+          row.classList.remove('is-dragging');
+          container.querySelectorAll('.prize-item-row').forEach(r => {
+            r.classList.remove('drop-above', 'drop-below', 'is-dragging');
+          });
+          draggedPrizeIndex = null;
+        });
+
+        row.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (draggedPrizeIndex === null) return;
+          e.dataTransfer.dropEffect = 'move';
+
+          const rect = row.getBoundingClientRect();
+          const relY = e.clientY - rect.top;
+          const isTopHalf = relY < (rect.height / 2);
+
+          row.classList.toggle('drop-above', isTopHalf);
+          row.classList.toggle('drop-below', !isTopHalf);
+        });
+
+        row.addEventListener('dragleave', () => {
+          row.classList.remove('drop-above', 'drop-below');
+        });
+
+        row.addEventListener('drop', (e) => {
+          e.preventDefault();
+          row.classList.remove('drop-above', 'drop-below');
+          if (draggedPrizeIndex === null) return;
+
+          const fromIdx = draggedPrizeIndex;
+          const targetIdx = idx;
+          const rect = row.getBoundingClientRect();
+          const insertBefore = (e.clientY - rect.top) < (rect.height / 2);
+
+          reorderPrizes(fromIdx, targetIdx, insertBefore);
+        });
+
+        // BUTTON ACTIONS
+        row.querySelector('.btn-select-prize').onclick = (e) => {
+          e.stopPropagation();
           state.activePrizeId = prize.id;
           localStorage.setItem('dnd_active_prize_id', prize.id);
           renderPrizesUI();
           updateActivePrizeUI();
-          showToast(`Active Prize: ${prize.name}`);
+          showToast(`Active Prize: #${orderNum} ${prize.name}`);
         };
 
-        row.querySelector('.btn-edit-prize').onclick = () => openEditPrizeModal(prize);
+        row.querySelector('.btn-edit-prize').onclick = (e) => {
+          e.stopPropagation();
+          openEditPrizeModal(prize);
+        };
 
-        row.querySelector('.btn-del-prize').onclick = () => {
+        row.querySelector('.btn-del-prize').onclick = (e) => {
+          e.stopPropagation();
           if (state.prizes.length <= 1) {
             Modal.alert('Notice', 'You must have at least one prize configured.');
             return;
