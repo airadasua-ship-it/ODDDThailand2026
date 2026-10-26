@@ -488,6 +488,38 @@
       will-change: transform;
     }
 
+    /* CONCEALED IDLE PLACEHOLDER VIEW (ANTI-LOCK / ANTI-PRESELECTION) */
+    .slot-drum-track.concealed .participant-card {
+      filter: blur(4px);
+      opacity: 0.45;
+      user-select: none;
+      transition: filter 0.25s ease, opacity 0.25s ease;
+    }
+    .slot-drum-track.concealed .participant-card.active-placeholder {
+      filter: blur(2px);
+      opacity: 0.85;
+    }
+    .participant-card .placeholder-name {
+      color: #ffd700 !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.12em !important;
+      text-shadow: 0 0 16px rgba(255, 215, 0, 0.75), 0 2px 6px rgba(0, 0, 0, 0.9) !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .participant-card .placeholder-pill {
+      background: rgba(245, 158, 11, 0.16) !important;
+      border-color: rgba(245, 158, 11, 0.45) !important;
+      color: #fde68a !important;
+      letter-spacing: 0.1em !important;
+    }
+    .participant-card .placeholder-id {
+      color: rgba(255, 255, 255, 0.35) !important;
+      letter-spacing: 0.12em !important;
+    }
+
     /* INDIVIDUAL PARTICIPANT CARD (HEIGHT 96px) */
     .participant-card {
       width: 100%;
@@ -1874,6 +1906,7 @@
       prizes: [],
       activePrizeId: null,
       isSpinning: false,
+      isConcealed: true,
       spinPhase: 'IDLE', // 'IDLE', 'ACCEL', 'CRUISE', 'DECEL', 'SETTLE'
       sfxEnabled: true,
       bgmPlaying: false,
@@ -2377,7 +2410,11 @@
         localStorage.setItem('dnd_participants', JSON.stringify(participants));
         updateRemainingPool();
         updateStatsUI();
-        renderVirtualCards(currentY);
+        if (!state.isSpinning) {
+          setConcealedState(true);
+        } else {
+          renderVirtualCards(currentY);
+        }
 
         document.getElementById('statSyncStatus').textContent = `Synced (${participants.length} loaded)`;
         if (showToasts) showToast(`Successfully synced ${participants.length} participants.`);
@@ -2976,7 +3013,11 @@
             updateStatsUI();
             renderWinnersUI();
             updateActivePrizeUI();
-            renderVirtualCards(currentY);
+            if (!state.isSpinning) {
+              setConcealedState(true);
+            } else {
+              renderVirtualCards(currentY);
+            }
             showToast(`${w.name} returned to pool.`);
           });
         };
@@ -3039,6 +3080,48 @@
     let decelDuration = 6.5;
     let isManualStop = false;
 
+    /* GOLDEN DIAMOND STAR SVGs FOR MYSTERIOUS PLACEHOLDER (STRICTLY NO EMOJIS) */
+    const STAR_SVG = `<svg viewBox="0 0 24 24" width="16" height="16" fill="#ffd700" style="vertical-align: middle; margin: 0 4px; filter: drop-shadow(0 0 4px rgba(255,215,0,0.8));"><polygon points="12,2 15,9 22,12 15,15 12,22 9,15 2,12 9,9"/></svg>`;
+    const STAR_SVG_SM = `<svg viewBox="0 0 24 24" width="13" height="13" fill="#ffd700" style="vertical-align: middle; margin: 0 3px; opacity: 0.7; filter: drop-shadow(0 0 3px rgba(255,215,0,0.6));"><polygon points="12,2 15,9 22,12 15,15 12,22 9,15 2,12 9,9"/></svg>`;
+
+    /* =====================================================================
+       TRUE CONTINUOUS DYNAMIC SHUFFLE ENGINE & TAPE BUFFER
+       ===================================================================== */
+    let tapeCache = new Map();
+    let activeShuffledPool = [];
+    let poolCursor = 0;
+
+    function fisherYatesShuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function setConcealedState(concealed) {
+      state.isConcealed = !!concealed;
+      const track = document.getElementById('slotDrumTrack');
+      const targetFrame = document.getElementById('slotTargetFrame');
+      if (track) {
+        if (state.isConcealed) {
+          track.classList.add('concealed');
+          if (targetFrame) targetFrame.classList.remove('winner-locked');
+          currentY = 0;
+        } else {
+          track.classList.remove('concealed');
+        }
+      }
+      if (virtualCardElements && virtualCardElements.length > 0) {
+        virtualCardElements.forEach(el => {
+          el._renderedIndex = -9999;
+          el._renderedConcealed = undefined;
+        });
+        renderVirtualCards(currentY);
+      }
+    }
+
     function setupVirtualDrumDOM() {
       const track = document.getElementById('slotDrumTrack');
       track.innerHTML = '';
@@ -3057,28 +3140,80 @@
         virtualCardElements.push(el);
       }
 
-      renderVirtualCards(currentY);
+      setConcealedState(true);
     }
 
     function getParticipantForIndex(index) {
-      const pool = state.remainingPool.length > 0 ? state.remainingPool : state.participants;
-      if (pool.length === 0) {
+      if (state.isConcealed) {
+        if (index === 1) { // Center highlight slot at top: ITEM_HEIGHT
+          return {
+            id: ' - - - - ',
+            name: 'READY TO SPIN',
+            dept: 'LUCKY DRAW',
+            displayDept: 'LUCKY DRAW',
+            isPlaceholder: true,
+            isCenter: true
+          };
+        } else {
+          return {
+            id: ' ? ? ? ? ',
+            name: '? ? ? ? ?',
+            dept: 'ODDD 2026',
+            displayDept: 'ODDD 2026',
+            isPlaceholder: true,
+            isCenter: false
+          };
+        }
+      }
+
+      if (tapeCache.has(index)) {
+        return tapeCache.get(index);
+      }
+
+      const basePool = state.remainingPool.length > 0 ? state.remainingPool : state.participants;
+      if (basePool.length === 0) {
         return { id: '', name: 'Empty Pool', dept: '', displayDept: 'None' };
       }
-
-      if (targetWinner && index === targetIndex) {
-        return targetWinner;
+      if (basePool.length === 1) {
+        return basePool[0];
       }
 
-      if (targetWinner && Math.abs(index - targetIndex) <= 3) {
-        const altPool = pool.filter(p => p !== targetWinner);
-        const source = altPool.length > 0 ? altPool : pool;
-        const safeIdx = ((index % source.length) + source.length) % source.length;
-        return source[safeIdx];
+      // Continuous dynamic randomized batches via Fisher-Yates
+      if (!activeShuffledPool || activeShuffledPool.length === 0 || poolCursor >= activeShuffledPool.length) {
+        activeShuffledPool = fisherYatesShuffle(basePool);
+        poolCursor = 0;
       }
 
-      const safeIdx = ((index % pool.length) + pool.length) % pool.length;
-      return pool[safeIdx];
+      let candidate = activeShuffledPool[poolCursor];
+      poolCursor++;
+
+      const prevParticipant = tapeCache.get(index - 1);
+      const nextParticipant = tapeCache.get(index + 1);
+      const prevId = prevParticipant ? String(prevParticipant.id) : null;
+      const nextId = nextParticipant ? String(nextParticipant.id) : null;
+
+      // Guarantee no back-to-back identical names in consecutive slots
+      if ((prevId && String(candidate.id) === prevId) || (nextId && String(candidate.id) === nextId)) {
+        const validAlternatives = basePool.filter(p => String(p.id) !== prevId && String(p.id) !== nextId);
+        if (validAlternatives.length > 0) {
+          candidate = validAlternatives[Math.floor(Math.random() * validAlternatives.length)];
+        }
+      }
+
+      tapeCache.set(index, candidate);
+
+      // Memory garbage collection for tape buffer
+      if (tapeCache.size > 250) {
+        const minKeep = index - 40;
+        const maxKeep = index + 100;
+        for (const k of tapeCache.keys()) {
+          if (k < minKeep || k > maxKeep) {
+            tapeCache.delete(k);
+          }
+        }
+      }
+
+      return candidate;
     }
 
     function renderVirtualCards(yPos) {
@@ -3093,17 +3228,42 @@
         const topPos = (i * ITEM_HEIGHT) - yPos;
         cardEl.style.transform = `translate3d(0, ${topPos}px, 0)`;
 
-        if (cardEl._renderedIndex !== i) {
+        if (cardEl._renderedIndex !== i || cardEl._renderedConcealed !== state.isConcealed) {
           cardEl._renderedIndex = i;
+          cardEl._renderedConcealed = state.isConcealed;
           const p = getParticipantForIndex(i);
-          const isHQ = (p.dept || '').toUpperCase() === 'HQ';
-          cardEl.innerHTML = `
-            <div class="card-content">
-              <span class="participant-dept-pill ${isHQ ? 'hq' : ''}">${p.displayDept}</span>
-              <div class="participant-name">${p.name}</div>
-              <span class="participant-id">#${p.id}</span>
-            </div>
-          `;
+
+          if (p.isPlaceholder) {
+            if (p.isCenter) {
+              cardEl.classList.add('active-placeholder');
+              cardEl.innerHTML = `
+                <div class="card-content">
+                  <span class="participant-dept-pill placeholder-pill">LUCKY DRAW</span>
+                  <div class="participant-name placeholder-name">${STAR_SVG} READY TO SPIN ${STAR_SVG}</div>
+                  <span class="participant-id placeholder-id"># - - - -</span>
+                </div>
+              `;
+            } else {
+              cardEl.classList.remove('active-placeholder');
+              cardEl.innerHTML = `
+                <div class="card-content">
+                  <span class="participant-dept-pill placeholder-pill" style="opacity: 0.35;">ODDD 2026</span>
+                  <div class="participant-name placeholder-name" style="letter-spacing: 0.22em; font-size: 0.95em;">${STAR_SVG_SM} ? ? ? ? ? ${STAR_SVG_SM}</div>
+                  <span class="participant-id placeholder-id" style="opacity: 0.35;"># ? ? ? ?</span>
+                </div>
+              `;
+            }
+          } else {
+            cardEl.classList.remove('active-placeholder');
+            const isHQ = (p.dept || '').toUpperCase() === 'HQ';
+            cardEl.innerHTML = `
+              <div class="card-content">
+                <span class="participant-dept-pill ${isHQ ? 'hq' : ''}">${p.displayDept || p.dept || ''}</span>
+                <div class="participant-name">${p.name}</div>
+                <span class="participant-id">#${p.id}</span>
+              </div>
+            `;
+          }
         }
       }
     }
@@ -3124,8 +3284,17 @@
 
       audio.init();
 
-      const winnerIndex = Math.floor(Math.random() * state.remainingPool.length);
-      targetWinner = state.remainingPool[winnerIndex];
+      // Instantly lift conceal mask and reveal dynamic rolling tape
+      setConcealedState(false);
+
+      // Deep Fisher-Yates shuffle on cloned remaining pool
+      activeShuffledPool = fisherYatesShuffle(state.remainingPool);
+      poolCursor = 0;
+      tapeCache.clear();
+
+      // Completely unbiased random winner selection
+      const winnerIndex = Math.floor(Math.random() * activeShuffledPool.length);
+      targetWinner = activeShuffledPool[winnerIndex];
 
       state.isSpinning = true;
       state.spinPhase = 'ACCEL';
@@ -3211,13 +3380,36 @@
       decelStartTime = performance.now();
       decelStartY = currentY;
 
-      // Viewport is 288px. Highlight center is top 96px to 192px (center 144px).
-      // When currentY = (targetIndex - 1) * ITEM_HEIGHT, target card lands exactly at top 96px!
+      // Viewport highlight center is top: ITEM_HEIGHT to 2*ITEM_HEIGHT
+      // When currentY = (targetIndex - 1) * ITEM_HEIGHT, target card lands exactly at top: ITEM_HEIGHT!
       const currentFloatIndex = currentY / ITEM_HEIGHT;
       const estimatedCardsToPass = Math.max(Math.round((velocity * duration * 0.45) / ITEM_HEIGHT), 12);
       targetIndex = Math.ceil(currentFloatIndex) + estimatedCardsToPass;
       targetY = (targetIndex - 1) * ITEM_HEIGHT;
       decelDistance = targetY - decelStartY;
+
+      // Lock selected winner at exact targetIndex
+      tapeCache.set(targetIndex, targetWinner);
+
+      // Populate slots immediately above and below dynamically from OTHER remaining participants (no back-to-back duplicates)
+      const basePool = state.remainingPool.length > 0 ? state.remainingPool : state.participants;
+      const altPool = basePool.filter(p => String(p.id) !== String(targetWinner.id));
+      const sourcePool = altPool.length > 0 ? altPool : basePool;
+      const shuffledNeighbors = fisherYatesShuffle(sourcePool);
+
+      const topNeighbor = shuffledNeighbors[0] || targetWinner;
+      let bottomNeighbor = (shuffledNeighbors.length > 1 ? shuffledNeighbors[1] : shuffledNeighbors[0]) || targetWinner;
+      if (shuffledNeighbors.length > 1 && String(bottomNeighbor.id) === String(topNeighbor.id)) {
+        bottomNeighbor = shuffledNeighbors[1] || targetWinner;
+      }
+
+      tapeCache.set(targetIndex - 1, topNeighbor);
+      tapeCache.set(targetIndex + 1, bottomNeighbor);
+
+      const topFar = (shuffledNeighbors.length > 2 ? shuffledNeighbors[2] : shuffledNeighbors[0]) || targetWinner;
+      const bottomFar = (shuffledNeighbors.length > 3 ? shuffledNeighbors[3] : (shuffledNeighbors[1] || shuffledNeighbors[0])) || targetWinner;
+      tapeCache.set(targetIndex - 2, topFar);
+      tapeCache.set(targetIndex + 2, bottomFar);
     }
 
     function forceStopSpin() {
@@ -3309,6 +3501,9 @@
 
       showToast(`Winner confirmed: ${participant.name}.`);
 
+      // Immediately return spin console to concealed idle view (anti-preselection)
+      setConcealedState(true);
+
       // Auto advance to next prize if current is depleted
       if (prize.remaining <= 0) {
         const nextPrize = state.prizes.find(p => p.remaining > 0);
@@ -3345,10 +3540,12 @@
       updateStatsUI();
       renderWinnersUI();
       updateActivePrizeUI();
-      renderVirtualCards(currentY);
 
       modal.classList.remove('open');
       state.pendingWinner = null;
+
+      // Immediately return spin console to concealed idle view
+      setConcealedState(true);
 
       showToast(`Winner canceled. ${participant.name} returned to pool.`);
     }
@@ -3864,7 +4061,7 @@
         updateStatsUI();
         renderWinnersUI();
         updateActivePrizeUI();
-        renderVirtualCards(currentY);
+        setConcealedState(true);
         showToast('Pool fully restored.');
       });
     };
@@ -3880,6 +4077,7 @@
         state.participants = [...EMBEDDED_DEFAULT_PARTICIPANTS];
         updateRemainingPool();
         initData();
+        setConcealedState(true);
         showToast('Factory reset complete.');
       });
     };
