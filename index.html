@@ -2142,28 +2142,59 @@
     const DEFAULT_PRIZE_FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'><rect width='100' height='100' rx='16' fill='%231e293b'/><circle cx='50' cy='50' r='32' fill='%23334155'/><polygon points='50,28 56,42 71,44 60,55 63,70 50,62 37,70 40,55 29,44 44,42' fill='%23ffd700'/></svg>";
 
     /* =====================================================================
-       APPLICATION STATE
+       APPLICATION STATE & LOCALSTORAGE PERSISTENCE ('owndays_luckydraw_state')
        ===================================================================== */
+    let _initUnifiedState = null;
+    try {
+      const _raw = localStorage.getItem('owndays_luckydraw_state');
+      if (_raw) _initUnifiedState = JSON.parse(_raw);
+    } catch (e) {}
+
     const state = {
       isAdminLoggedIn: false,
-      sheetUrl: localStorage.getItem('dnd_sheet_url') || DEFAULT_SHEET_URL,
-      prizeSheetUrl: localStorage.getItem('dnd_prize_sheet_url') || DEFAULT_PRIZE_SHEET_URL,
-      spinDuration: parseInt(localStorage.getItem('dnd_spin_duration'), 10) || 15,
+      sheetUrl: (_initUnifiedState && _initUnifiedState.sheetUrl) || localStorage.getItem('dnd_sheet_url') || DEFAULT_SHEET_URL,
+      prizeSheetUrl: (_initUnifiedState && _initUnifiedState.prizeSheetUrl) || localStorage.getItem('dnd_prize_sheet_url') || DEFAULT_PRIZE_SHEET_URL,
+      spinDuration: (_initUnifiedState && _initUnifiedState.spinDuration) || parseInt(localStorage.getItem('dnd_spin_duration'), 10) || 15,
       historyPanelOpen: localStorage.getItem('dnd_history_open') !== 'false',
-      participants: [],
+      participants: (_initUnifiedState && Array.isArray(_initUnifiedState.participants)) ? _initUnifiedState.participants : [],
       remainingPool: [],
-      winners: [],
-      prizes: [],
-      activePrizeId: null,
+      winners: (_initUnifiedState && Array.isArray(_initUnifiedState.winners)) ? _initUnifiedState.winners : [],
+      prizes: (_initUnifiedState && Array.isArray(_initUnifiedState.prizes)) ? _initUnifiedState.prizes : [],
+      activePrizeId: (_initUnifiedState && _initUnifiedState.activePrizeId) || localStorage.getItem('dnd_active_prize_id') || null,
       isSpinning: false,
       isConcealed: true,
       spinPhase: 'IDLE', // 'IDLE', 'ACCEL', 'CRUISE', 'DECEL', 'SETTLE'
       sfxEnabled: true,
+      soundEnabled: true,
       bgmPlaying: false,
       bgmSource: localStorage.getItem('dnd_bgm_source') || 'synth',
       pendingWinner: null, // { participant, prize, record }
       stageMode: false
     };
+
+    function saveAppState() {
+      try {
+        const payload = {
+          sheetUrl: state.sheetUrl,
+          prizeSheetUrl: state.prizeSheetUrl,
+          prizes: state.prizes,
+          winners: state.winners,
+          participants: state.participants,
+          activePrizeId: state.activePrizeId,
+          spinDuration: state.spinDuration,
+          historyPanelOpen: state.historyPanelOpen,
+          stageMode: state.stageMode
+        };
+        localStorage.setItem('owndays_luckydraw_state', JSON.stringify(payload));
+        // Keep individual keys synced for backwards-compatibility
+        localStorage.setItem('dnd_prizes', JSON.stringify(state.prizes));
+        localStorage.setItem('dnd_winners', JSON.stringify(state.winners));
+        localStorage.setItem('dnd_participants', JSON.stringify(state.participants));
+        if (state.sheetUrl) localStorage.setItem('dnd_sheet_url', state.sheetUrl);
+        if (state.prizeSheetUrl) localStorage.setItem('dnd_prize_sheet_url', state.prizeSheetUrl);
+        if (state.activePrizeId) localStorage.setItem('dnd_active_prize_id', state.activePrizeId);
+      } catch (e) {}
+    }
 
     /* =====================================================================
        KEYNOTE-GRADE SUSPENSE DRUM ROLL & DRAMATIC IMPACT SFX (WEB AUDIO API)
@@ -2689,29 +2720,57 @@
     }
 
     function initData() {
+      // 1. Restore from owndays_luckydraw_state if saved
+      let savedState = null;
+      try {
+        const rawState = localStorage.getItem('owndays_luckydraw_state');
+        if (rawState) savedState = JSON.parse(rawState);
+      } catch (e) {}
+
+      // Sheet URLs
+      if (savedState && savedState.sheetUrl) {
+        state.sheetUrl = savedState.sheetUrl;
+      } else {
+        state.sheetUrl = localStorage.getItem('dnd_sheet_url') || DEFAULT_SHEET_URL;
+      }
       document.getElementById('sheetUrlInput').value = state.sheetUrl;
+
+      if (savedState && savedState.prizeSheetUrl) {
+        state.prizeSheetUrl = savedState.prizeSheetUrl;
+      } else {
+        state.prizeSheetUrl = localStorage.getItem('dnd_prize_sheet_url') || DEFAULT_PRIZE_SHEET_URL;
+      }
       const prizeSheetInput = document.getElementById('prizeSheetUrlInput');
       if (prizeSheetInput) prizeSheetInput.value = state.prizeSheetUrl;
 
       // Spin Duration
+      if (savedState && savedState.spinDuration) {
+        state.spinDuration = parseInt(savedState.spinDuration, 10) || 15;
+      } else {
+        state.spinDuration = parseInt(localStorage.getItem('dnd_spin_duration'), 10) || 15;
+      }
       document.getElementById('cfgSpinDuration').value = state.spinDuration;
       document.getElementById('numSpinDuration').value = state.spinDuration;
       document.getElementById('labelSpinDuration').textContent = `${state.spinDuration}s`;
 
       // Load Prizes
-      const savedPrizes = localStorage.getItem('dnd_prizes');
-      if (savedPrizes) {
-        try { state.prizes = JSON.parse(savedPrizes); }
-        catch (e) { state.prizes = [...EMBEDDED_DEFAULT_PRIZES]; }
+      if (savedState && Array.isArray(savedState.prizes) && savedState.prizes.length > 0) {
+        state.prizes = savedState.prizes;
       } else {
-        state.prizes = [...EMBEDDED_DEFAULT_PRIZES];
+        const savedPrizes = localStorage.getItem('dnd_prizes');
+        if (savedPrizes) {
+          try { state.prizes = JSON.parse(savedPrizes); }
+          catch (e) { state.prizes = [...EMBEDDED_DEFAULT_PRIZES]; }
+        } else {
+          state.prizes = [...EMBEDDED_DEFAULT_PRIZES];
+        }
       }
 
       // Ensure state.prizes is strictly sorted by orderNum ascending (Smallest to Grand Prize)
       state.prizes.sort((a, b) => (a.orderNum || 0) - (b.orderNum || 0));
 
       // Active Prize: preserve if has remaining stock > 0, otherwise select first available in sequence
-      const savedActiveId = localStorage.getItem('dnd_active_prize_id');
+      const savedActiveId = (savedState && savedState.activePrizeId) || localStorage.getItem('dnd_active_prize_id');
       const activePrizeObj = state.prizes.find(p => p.id === savedActiveId);
       if (activePrizeObj && activePrizeObj.remaining > 0) {
         state.activePrizeId = activePrizeObj.id;
@@ -2722,24 +2781,35 @@
       }
 
       // Winners
-      const savedWinners = localStorage.getItem('dnd_winners');
-      if (savedWinners) {
-        try { state.winners = JSON.parse(savedWinners); }
-        catch (e) { state.winners = []; }
+      if (savedState && Array.isArray(savedState.winners)) {
+        state.winners = savedState.winners;
       } else {
-        state.winners = [];
+        const savedWinners = localStorage.getItem('dnd_winners');
+        if (savedWinners) {
+          try { state.winners = JSON.parse(savedWinners); }
+          catch (e) { state.winners = []; }
+        } else {
+          state.winners = [];
+        }
       }
 
-      // Participants
-      const savedParticipants = localStorage.getItem('dnd_participants');
-      if (savedParticipants) {
-        try { state.participants = JSON.parse(savedParticipants); }
-        catch (e) { state.participants = [...EMBEDDED_DEFAULT_PARTICIPANTS]; }
+      // Participants: only load embedded mock data if localStorage is completely empty
+      if (savedState && Array.isArray(savedState.participants) && savedState.participants.length > 0) {
+        state.participants = savedState.participants;
       } else {
-        state.participants = [...EMBEDDED_DEFAULT_PARTICIPANTS];
+        const savedParticipants = localStorage.getItem('dnd_participants');
+        if (savedParticipants) {
+          try { state.participants = JSON.parse(savedParticipants); }
+          catch (e) { state.participants = [...EMBEDDED_DEFAULT_PARTICIPANTS]; }
+        } else {
+          state.participants = [...EMBEDDED_DEFAULT_PARTICIPANTS];
+        }
       }
 
+      // Filter remainingPool against state.winners
       updateRemainingPool();
+      saveAppState();
+
       loadScreenConfiguration();
       loadPanelPositionsAndSizes();
       renderPrizesUI();
@@ -2751,8 +2821,18 @@
     }
 
     function updateRemainingPool() {
-      const winnerIds = new Set(state.winners.map(w => String(w.id)));
-      state.remainingPool = state.participants.filter(p => !winnerIds.has(String(p.id)));
+      const winnerKeys = new Set();
+      state.winners.forEach(w => {
+        if (w.id) winnerKeys.add(String(w.id).trim().toLowerCase());
+        if (w.name) winnerKeys.add(String(w.name).trim().toLowerCase());
+      });
+      state.remainingPool = state.participants.filter(p => {
+        const idKey = p.id ? String(p.id).trim().toLowerCase() : '';
+        const nameKey = p.name ? String(p.name).trim().toLowerCase() : '';
+        if (idKey && winnerKeys.has(idKey)) return false;
+        if (nameKey && winnerKeys.has(nameKey)) return false;
+        return true;
+      });
     }
 
     function updateStatsUI() {
@@ -2809,6 +2889,7 @@
         localStorage.setItem('dnd_participants', JSON.stringify(participants));
         updateRemainingPool();
         updateStatsUI();
+        saveAppState();
         if (!state.isSpinning) {
           setConcealedState(true);
         } else {
@@ -2988,6 +3069,7 @@
         renderPrizesUI();
         updateActivePrizeUI();
         updatePrizeSummaryMetrics();
+        saveAppState();
 
         if (statusEl) {
           statusEl.textContent = `Synced ${newPrizes.length} prizes (Ascending Order)`;
@@ -4384,6 +4466,7 @@
       updateStatsUI();
       renderWinnersUI();
       updateActivePrizeUI();
+      saveAppState();
 
       // Store pending winner for Confirm/Cancel controls
       state.pendingWinner = { participant: winner, prize: prize, record: record };
@@ -4433,6 +4516,7 @@
       state.pendingWinner = null;
       localStorage.setItem('dnd_winners', JSON.stringify(state.winners));
       localStorage.setItem('dnd_prizes', JSON.stringify(state.prizes));
+      saveAppState();
 
       showToast(`Winner confirmed: ${participant.name}.`);
 
@@ -4468,6 +4552,7 @@
       updateStatsUI();
       renderWinnersUI();
       updateActivePrizeUI();
+      saveAppState();
 
       modal.classList.remove('open');
       state.pendingWinner = null;
@@ -5031,6 +5116,7 @@
         renderWinnersUI();
         updateActivePrizeUI();
         setConcealedState(true);
+        saveAppState();
         showToast('Pool fully restored.');
       });
     };
@@ -5038,6 +5124,7 @@
     document.getElementById('btnFactoryReset').onclick = () => {
       Modal.confirm('Factory Reset', 'Clear ALL custom prizes, winner history, and settings back to factory defaults?', () => {
         localStorage.clear();
+        localStorage.removeItem('owndays_luckydraw_state');
         state.sheetUrl = DEFAULT_SHEET_URL;
         state.prizeSheetUrl = DEFAULT_PRIZE_SHEET_URL;
         state.spinDuration = 15;
@@ -5048,6 +5135,7 @@
         updateRemainingPool();
         initData();
         setConcealedState(true);
+        saveAppState();
         showToast('Factory reset complete.');
       });
     };
