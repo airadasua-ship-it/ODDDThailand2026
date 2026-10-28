@@ -2092,43 +2092,203 @@
     class SoundEngine {
       constructor() {
         this.ctx = null;
+        this.isRolling = false;
+        this.drumRollTimeout = null;
+        this.rollIntensity = 0.22;
+        this.noiseBuffer = null;
       }
 
       init() {
         if (!this.ctx) {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) this.ctx = new AudioCtx();
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+            this._createNoiseBuffer();
+          }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
+          this.ctx.resume().catch(() => {});
         }
       }
 
-      playTick(speedRatio = 1) {
-        if (!state.sfxEnabled) return;
+      _createNoiseBuffer() {
+        if (!this.ctx) return;
+        const bufferSize = Math.floor(this.ctx.sampleRate * 2);
+        this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = this.noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+      }
+
+      isAudioEnabled() {
+        if (state.soundEnabled !== undefined && !state.soundEnabled) return false;
+        if (state.sfxEnabled !== undefined && !state.sfxEnabled) return false;
+        return true;
+      }
+
+      // Single acoustic drum roll strike:
+      // Filtered noise burst combined with a low-frequency oscillator (~90Hz to 120Hz)
+      playDrumTap(intensity = 0.5, isLeftStick = false) {
+        if (!this.isAudioEnabled()) return;
         try {
           this.init();
           if (!this.ctx) return;
+          const t = this.ctx.currentTime;
+
+          // 1. Low-frequency oscillator (~90Hz to 120Hz)
           const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-
-          const baseFreq = 700 + Math.min(speedRatio * 500, 700);
+          const oscGain = this.ctx.createGain();
+          const baseFreq = (isLeftStick ? 92 : 108) + (intensity * 18); // ~90Hz - 126Hz
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.025);
+          osc.frequency.setValueAtTime(baseFreq, t);
+          osc.frequency.exponentialRampToValueAtTime(45, t + 0.05);
 
-          gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.025);
+          const oscVol = Math.min(0.12 + (intensity * 0.32), 0.55);
+          oscGain.gain.setValueAtTime(oscVol, t);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
 
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start();
-          osc.stop(this.ctx.currentTime + 0.026);
+          osc.connect(oscGain);
+          oscGain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.055);
+
+          // 2. Filtered noise burst (crisp snare rattle & attack)
+          if (this.noiseBuffer) {
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1400 + (intensity * 800), t);
+            filter.Q.setValueAtTime(2.2, t);
+
+            const noiseGain = this.ctx.createGain();
+            const noiseVol = Math.min(0.06 + (intensity * 0.26), 0.45);
+            noiseGain.gain.setValueAtTime(noiseVol, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + (0.025 + intensity * 0.025));
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(this.ctx.destination);
+            noise.start(t);
+            noise.stop(t + 0.06);
+          }
         } catch (e) {}
       }
 
+      // Continuous Keynote-grade suspense drum roll
+      playDrumRoll() {
+        if (!this.isAudioEnabled()) return;
+        this.init();
+        this.stopDrumRoll();
+        this.isRolling = true;
+        this.rollIntensity = 0.22;
+
+        let isLeft = false;
+        let currentIntervalMs = 70; // starts ~14 hits/sec
+
+        const scheduleHit = () => {
+          if (!this.isRolling) return;
+          this.playDrumTap(this.rollIntensity, isLeft);
+          isLeft = !isLeft;
+
+          // As intensity increases toward deceleration, increase roll frequency up to ~30 hits/sec
+          currentIntervalMs = Math.max(32, 70 - (this.rollIntensity * 38));
+          this.drumRollTimeout = setTimeout(scheduleHit, currentIntervalMs);
+        };
+
+        scheduleHit();
+      }
+
+      startDrumRoll() {
+        this.playDrumRoll();
+      }
+
+      // Dynamic acceleration during spin
+      updateDrumRoll(progress, speedRatio = 1) {
+        if (!this.isRolling) return;
+        this.rollIntensity = Math.min(Math.max(0.2 + (progress * 0.65) + (speedRatio * 0.15), 0.2), 1.0);
+      }
+
+      stopDrumRoll() {
+        this.isRolling = false;
+        if (this.drumRollTimeout) {
+          clearTimeout(this.drumRollTimeout);
+          this.drumRollTimeout = null;
+        }
+      }
+
+      // Orchestral Bass Drum Impact "ตึ้ง!" (playBassDrumImpact)
+      // Rapid pitch-drop envelope (starting ~140Hz decaying to ~45Hz within 150ms)
+      // with a resonant sub-bass decay (~800ms) and low-pass transient punch.
+      playBassDrumImpact() {
+        this.stopDrumRoll();
+        if (!this.isAudioEnabled()) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const t = this.ctx.currentTime;
+
+          // 1. Pitch-drop envelope: starting ~140Hz decaying to ~45Hz within 150ms with ~800ms resonant sub-bass decay
+          const subOsc = this.ctx.createOscillator();
+          const subGain = this.ctx.createGain();
+          subOsc.type = 'sine';
+          subOsc.frequency.setValueAtTime(140, t);
+          subOsc.frequency.exponentialRampToValueAtTime(45, t + 0.15);
+          subOsc.frequency.exponentialRampToValueAtTime(32, t + 0.8);
+
+          subGain.gain.setValueAtTime(0.85, t);
+          subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+
+          subOsc.connect(subGain);
+          subGain.connect(this.ctx.destination);
+          subOsc.start(t);
+          subOsc.stop(t + 0.82);
+
+          // 2. Low-pass transient punch
+          const punchOsc = this.ctx.createOscillator();
+          const punchGain = this.ctx.createGain();
+          punchOsc.type = 'triangle';
+          punchOsc.frequency.setValueAtTime(220, t);
+          punchOsc.frequency.exponentialRampToValueAtTime(55, t + 0.08);
+
+          punchGain.gain.setValueAtTime(0.55, t);
+          punchGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+
+          punchOsc.connect(punchGain);
+          punchGain.connect(this.ctx.destination);
+          punchOsc.start(t);
+          punchOsc.stop(t + 0.085);
+
+          // 3. Low-passed body thump transient
+          if (this.noiseBuffer) {
+            const punchNoise = this.ctx.createBufferSource();
+            punchNoise.buffer = this.noiseBuffer;
+
+            const lpFilter = this.ctx.createBiquadFilter();
+            lpFilter.type = 'lowpass';
+            lpFilter.frequency.setValueAtTime(260, t);
+
+            const noiseGain = this.ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.35, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+
+            punchNoise.connect(lpFilter);
+            lpFilter.connect(noiseGain);
+            noiseGain.connect(this.ctx.destination);
+            punchNoise.start(t);
+            punchNoise.stop(t + 0.11);
+          }
+        } catch (e) {}
+      }
+
+      playDramaticImpact() {
+        this.playBassDrumImpact();
+      }
+
       playLatch() {
-        if (!state.sfxEnabled) return;
+        if (!this.isAudioEnabled()) return;
         try {
           this.init();
           if (!this.ctx) return;
@@ -2149,35 +2309,12 @@
         } catch (e) {}
       }
 
+      playTick(speedRatio = 1) {
+        this.playDrumTap(Math.min(0.4 + speedRatio * 0.4, 0.9));
+      }
+
       playFanfare() {
-        if (!state.sfxEnabled) return;
-        try {
-          this.init();
-          if (!this.ctx) return;
-          const notes = [
-            { f: 523.25, t: 0.0, d: 0.16 }, // C5
-            { f: 659.25, t: 0.12, d: 0.16 }, // E5
-            { f: 783.99, t: 0.24, d: 0.18 }, // G5
-            { f: 1046.50, t: 0.40, d: 0.6 }, // C6
-            { f: 1318.51, t: 0.55, d: 0.9 }, // E6
-          ];
-
-          notes.forEach(n => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(n.f, this.ctx.currentTime + n.t);
-
-            gain.gain.setValueAtTime(0.0, this.ctx.currentTime + n.t);
-            gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + n.t + 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + n.t + n.d);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(this.ctx.currentTime + n.t);
-            osc.stop(this.ctx.currentTime + n.t + n.d);
-          });
-        } catch (e) {}
+        this.playBassDrumImpact();
       }
     }
 
@@ -3554,17 +3691,29 @@
       document.getElementById('modalRevealRemaining').textContent = `${prize.remaining} of ${prize.quantity} remaining in this draw`;
 
       document.getElementById('prizeRevealModal').classList.add('open');
-      audio.playLatch();
+      audio.playBassDrumImpact();
+    }
+
+    function closePrizeRevealModal() {
+      const modal = document.getElementById('prizeRevealModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function togglePrizeRevealModal() {
+      const modal = document.getElementById('prizeRevealModal');
+      if (!modal) return;
+      if (modal.classList.contains('open')) closePrizeRevealModal();
+      else showPrizeRevealModal();
     }
 
     document.getElementById('btnRevealPrizeQuick').onclick = showPrizeRevealModal;
     document.getElementById('dockPrizePill').onclick = showPrizeRevealModal;
     document.getElementById('btnStartDrawFromReveal').onclick = () => {
-      document.getElementById('prizeRevealModal').classList.remove('open');
+      closePrizeRevealModal();
     };
     document.getElementById('prizeRevealModal').onclick = (e) => {
       if (e.target.id === 'prizeRevealModal') {
-        document.getElementById('prizeRevealModal').classList.remove('open');
+        closePrizeRevealModal();
       }
     };
 
@@ -3895,6 +4044,7 @@
       }
 
       audio.init();
+      audio.playDrumRoll();
 
       // Instantly lift conceal mask and reveal dynamic rolling tape
       setConcealedState(false);
@@ -3972,6 +4122,10 @@
           lastTickCardIndex = currentCardIndex;
         }
 
+        const elapsedRatio = Math.min(elapsed / totalDuration, 1);
+        const speedRatio = Math.max(velocity / MAX_VELOCITY, 0.1);
+        audio.updateDrumRoll(elapsedRatio, speedRatio);
+
         renderVirtualCards(currentY);
 
         if (state.spinPhase !== 'SETTLE') {
@@ -4037,6 +4191,8 @@
       state.isSpinning = false;
       state.spinPhase = 'IDLE';
 
+      audio.stopDrumRoll();
+
       currentY = targetY;
       renderVirtualCards(currentY);
 
@@ -4077,7 +4233,7 @@
       state.pendingWinner = { participant: winner, prize: prize, record: record };
 
       setTimeout(() => {
-        audio.playFanfare();
+        audio.playBassDrumImpact();
         celebration.burst();
         showWinnerSpotlight(winner);
       }, 250);
@@ -4175,8 +4331,31 @@
        GLOBAL KEYBOARD CONTROLS
        ===================================================================== */
     window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+      // Safe Input Guard: ignore shortcut events while typing in fields
+      if (
+        (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) ||
+        (document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) ||
+        (e.target && e.target.isContentEditable) ||
+        (document.activeElement && document.activeElement.isContentEditable)
+      ) {
         return;
+      }
+
+      // 1. GLOBAL HOTKEY 'g' / 'G': Toggle Prize Showcase / Reveal Modal
+      if (e.key && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        togglePrizeRevealModal();
+        return;
+      }
+
+      // 2. ESCAPE KEY SHORTCUT: Close Prize Showcase Modal
+      if (e.key === 'Escape') {
+        const prizeModal = document.getElementById('prizeRevealModal');
+        if (prizeModal && prizeModal.classList.contains('open')) {
+          e.preventDefault();
+          closePrizeRevealModal();
+          return;
+        }
       }
 
       // WINNER OVERLAY CONTROLS
@@ -4202,7 +4381,7 @@
         }
 
         if (document.getElementById('prizeRevealModal').classList.contains('open')) {
-          document.getElementById('prizeRevealModal').classList.remove('open');
+          closePrizeRevealModal();
         }
 
         if (!state.isSpinning) {
@@ -4224,7 +4403,7 @@
         checkAdminAccess();
       } else if (e.key === 'p' || e.key === 'P' || e.code === 'KeyP') {
         e.preventDefault();
-        showPrizeRevealModal();
+        togglePrizeRevealModal();
       } else if (e.key === 'f' || e.key === 'F' || e.code === 'KeyF') {
         e.preventDefault();
         toggleFullscreen();
