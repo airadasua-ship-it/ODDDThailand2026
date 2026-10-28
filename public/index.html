@@ -1334,43 +1334,116 @@
       40%, 80% { transform: translateX(10px); }
     }
 
-    /* PRE-SPIN REVEAL MODAL */
+    /* PRIZE SHOWCASE / TEASER MODAL (HOTKEY: CMD / META) */
+    .prize-reveal-modal {
+      width: clamp(380px, 48vw, 760px);
+      min-width: 320px;
+      min-height: 380px;
+      max-width: 96vw;
+      max-height: 96vh;
+      border-color: #ffd700;
+      box-shadow: 0 0 90px rgba(255, 215, 0, 0.45), 0 30px 90px rgba(0, 0, 0, 0.95);
+      padding: clamp(20px, 3vh, 36px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      background: radial-gradient(circle at 50% 20%, rgba(30, 41, 59, 0.98), rgba(11, 15, 25, 0.99));
+      border: 1px solid rgba(255, 215, 0, 0.6);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(30px);
+      box-sizing: border-box;
+      overflow: hidden;
+    }
     .prize-reveal-badge {
       font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
+      font-size: clamp(0.75rem, 1.1vw, 0.95rem);
       font-weight: 800;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
       color: #ffd700;
       background: rgba(245, 158, 11, 0.2);
       border: 1px solid var(--gold-primary);
-      padding: 6px 18px;
+      padding: 6px 20px;
       border-radius: 9999px;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+      flex-shrink: 0;
+    }
+    .prize-reveal-img-wrap {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 8px 0;
+      overflow: hidden;
     }
     .prize-reveal-img {
-      width: clamp(160px, 22vw, 240px);
-      height: clamp(160px, 22vw, 240px);
+      max-width: 100%;
+      max-height: 48vh;
+      width: auto;
+      height: auto;
       object-fit: contain;
-      border-radius: var(--radius-lg);
-      background: #0b0f19;
+      border-radius: var(--radius-md);
+      background: rgba(11, 15, 25, 0.6);
       border: 2px solid rgba(245, 158, 11, 0.5);
-      box-shadow: 0 0 40px rgba(245, 158, 11, 0.3);
-      margin-bottom: 18px;
+      box-shadow: 0 0 45px rgba(245, 158, 11, 0.35);
+      transition: transform 0.3s ease;
     }
     .prize-reveal-name {
-      font-family: 'Cinzel', 'Inter', sans-serif;
-      font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+      font-family: 'Cinzel', 'Prompt', 'Inter', sans-serif;
+      font-size: clamp(1.4rem, 2.8vw, 2.5rem);
       font-weight: 900;
       background: var(--gold-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
+      text-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+      margin: 6px 0;
+      text-align: center;
+      line-height: 1.25;
+      max-width: 92%;
+      word-break: break-word;
+      flex-shrink: 0;
     }
     .prize-reveal-notes {
-      font-size: 0.95rem;
+      font-size: clamp(0.85rem, 1vw, 1.05rem);
       color: var(--text-muted);
-      margin-bottom: 22px;
-      max-width: 80%;
+      margin-bottom: 8px;
+      max-width: 85%;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .prize-reveal-remaining-wrap {
+      margin: 4px 0 10px 0;
+      flex-shrink: 0;
+    }
+    .prize-reveal-remaining-pill {
+      font-size: clamp(0.82rem, 1vw, 1rem);
+      font-weight: 800;
+      color: #ffd700;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 215, 0, 0.35);
+      padding: 5px 16px;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+    .teaser-key-hint {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    .teaser-key-hint kbd {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
     }
 
     /* MINIMALIST WINNER OVERLAY (STRICTLY NO ACTION BUTTONS) */
@@ -1866,8 +1939,8 @@
             <span id="sfxStatusText" style="color: #10b981;">ENABLED</span>
           </label>
           <div style="display: flex; gap: 8px;">
-            <button class="btn-secondary" id="btnTestTick" style="flex: 1;">Test Tick</button>
-            <button class="btn-secondary" id="btnTestFanfare" style="flex: 1;">Test Fanfare</button>
+            <button class="btn-secondary" id="btnTestTick" style="flex: 1;">Test Drum Roll</button>
+            <button class="btn-secondary" id="btnTestFanfare" style="flex: 1;">Test Impact SFX</button>
           </div>
         </div>
 
@@ -1941,19 +2014,25 @@
     </div>
   </div>
 
-  <!-- PRE-SPIN REVEAL MODAL -->
+  <!-- PRIZE SHOWCASE / TEASER MODAL (HOTKEY: CMD / META) -->
   <div class="modal-backdrop" id="prizeRevealModal">
-    <div class="modal-dialog prize-reveal-modal">
-      <span class="prize-reveal-badge" id="modalRevealTier">UP NEXT: GRAND PRIZE</span>
-      <img src="" alt="Prize" class="prize-reveal-img" id="modalRevealImg">
-      <h2 class="prize-reveal-name" id="modalRevealTitle">MacBook Pro 16"</h2>
-      <p class="prize-reveal-notes" id="modalRevealNotes">Space Black • 36GB Unified Memory</p>
-      <div style="margin-bottom: 24px; font-size: 0.88rem; color: #ffd700; font-weight: 700;">
-        <span id="modalRevealRemaining">1 remaining in this tier</span>
+    <div class="modal-dialog prize-reveal-modal" id="prizeShowcaseDialog">
+      <div class="prize-reveal-badge" id="modalRevealTier">✦ PRIZE #1 / 10 ✦</div>
+      <div class="prize-reveal-img-wrap">
+        <img src="" alt="Prize" class="prize-reveal-img" id="modalRevealImg">
       </div>
-      <button class="btn-spin-main" id="btnStartDrawFromReveal" style="width: 80%;">
-        READY TO DRAW
-      </button>
+      <h2 class="prize-reveal-name" id="modalRevealTitle">Prize Name</h2>
+      <p class="prize-reveal-notes" id="modalRevealNotes"></p>
+      <div class="prize-reveal-remaining-wrap">
+        <span class="prize-reveal-remaining-pill" id="modalRevealRemaining">คงเหลือ 1 / 1 ชิ้น</span>
+      </div>
+      <div class="teaser-key-hint">
+        <span>Press <kbd>⌘ Cmd</kbd> or <kbd>ESC</kbd> to dismiss</span>
+      </div>
+      <!-- CORNER DRAG-TO-RESIZE HANDLE -->
+      <div class="panel-resize-handle" id="prizeShowcaseResizeHandle" title="Drag to Resize Showcase">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="14" y1="2" x2="2" y2="14"/><line x1="14" y1="7" x2="7" y2="14"/><line x1="14" y1="12" x2="12" y2="14"/></svg>
+      </div>
     </div>
   </div>
 
@@ -2087,48 +2166,212 @@
     };
 
     /* =====================================================================
-       WEB AUDIO SYNTHESIZER
+       KEYNOTE-GRADE SUSPENSE DRUM ROLL & DRAMATIC IMPACT SFX (WEB AUDIO API)
        ===================================================================== */
     class SoundEngine {
       constructor() {
         this.ctx = null;
+        this.isRolling = false;
+        this.drumRollTimeout = null;
+        this.rollIntensity = 0.25;
+        this.noiseBuffer = null;
       }
 
       init() {
         if (!this.ctx) {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) this.ctx = new AudioCtx();
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+            this._createNoiseBuffer();
+          }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume();
         }
       }
 
-      playTick(speedRatio = 1) {
-        if (!state.sfxEnabled) return;
+      _createNoiseBuffer() {
+        if (!this.ctx) return;
+        const bufferSize = Math.floor(this.ctx.sampleRate * 2);
+        this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = this.noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+      }
+
+      isAudioEnabled() {
+        return state.soundEnabled !== undefined ? Boolean(state.soundEnabled) : Boolean(state.sfxEnabled);
+      }
+
+      // Single acoustic snare/timpani hit for drum roll
+      playDrumTap(intensity = 0.5, isLeftStick = false) {
+        if (!this.isAudioEnabled()) return;
         try {
           this.init();
           if (!this.ctx) return;
+          const t = this.ctx.currentTime;
+
+          // 1. Drum Body Resonance (Timpani / Snare shell)
           const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-
-          const baseFreq = 700 + Math.min(speedRatio * 500, 700);
+          const oscGain = this.ctx.createGain();
+          const baseFreq = (isLeftStick ? 140 : 155) + (intensity * 45);
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.025);
+          osc.frequency.setValueAtTime(baseFreq, t);
+          osc.frequency.exponentialRampToValueAtTime(45, t + 0.05);
 
-          gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.025);
+          const oscVol = Math.min(0.12 + (intensity * 0.28), 0.5);
+          oscGain.gain.setValueAtTime(oscVol, t);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
 
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start();
-          osc.stop(this.ctx.currentTime + 0.026);
+          osc.connect(oscGain);
+          oscGain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.055);
+
+          // 2. Snare Wire Crackle (Bandpass Filtered Noise)
+          if (this.noiseBuffer) {
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1600 + (intensity * 900), t);
+            filter.Q.setValueAtTime(2.2, t);
+
+            const noiseGain = this.ctx.createGain();
+            const noiseVol = Math.min(0.06 + (intensity * 0.24), 0.4);
+            noiseGain.gain.setValueAtTime(noiseVol, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + (0.025 + intensity * 0.025));
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(this.ctx.destination);
+            noise.start(t);
+            noise.stop(t + 0.06);
+          }
+        } catch (e) {}
+      }
+
+      // Start continuous accelerating suspense drum roll
+      startDrumRoll() {
+        if (!this.isAudioEnabled()) return;
+        this.init();
+        this.stopDrumRoll();
+        this.isRolling = true;
+        this.rollIntensity = 0.22;
+
+        let isLeft = false;
+        let currentIntervalMs = 75; // ~13 hits/sec initially
+
+        const scheduleHit = () => {
+          if (!this.isRolling) return;
+          this.playDrumTap(this.rollIntensity, isLeft);
+          isLeft = !isLeft;
+
+          // Dynamically accelerates up to ~28 hits/sec as intensity rises
+          currentIntervalMs = Math.max(34, 75 - (this.rollIntensity * 40));
+          this.drumRollTimeout = setTimeout(scheduleHit, currentIntervalMs);
+        };
+
+        scheduleHit();
+      }
+
+      // Dynamically intensify volume, tempo, and low-end resonance as spin progresses
+      updateDrumRoll(progress, speedRatio = 1) {
+        if (!this.isRolling) return;
+        this.rollIntensity = Math.min(Math.max(0.2 + (progress * 0.65) + (speedRatio * 0.15), 0.2), 1.0);
+      }
+
+      stopDrumRoll() {
+        this.isRolling = false;
+        if (this.drumRollTimeout) {
+          clearTimeout(this.drumRollTimeout);
+          this.drumRollTimeout = null;
+        }
+      }
+
+      // Keynote-Style Cinematic Orchestral Impact ("Boom & Shimmer")
+      playDramaticImpact() {
+        this.stopDrumRoll();
+        if (!this.isAudioEnabled()) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const t = this.ctx.currentTime;
+
+          // 1. Massive Sub-Bass Orchestral Drum Strike (The "Boom")
+          const subOsc = this.ctx.createOscillator();
+          const subGain = this.ctx.createGain();
+          subOsc.type = 'sine';
+          subOsc.frequency.setValueAtTime(125, t);
+          subOsc.frequency.exponentialRampToValueAtTime(32, t + 0.9);
+
+          subGain.gain.setValueAtTime(0.75, t);
+          subGain.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+
+          subOsc.connect(subGain);
+          subGain.connect(this.ctx.destination);
+          subOsc.start(t);
+          subOsc.stop(t + 1.65);
+
+          // 2. Attack Mallet Thud (Transient Punch)
+          const punchOsc = this.ctx.createOscillator();
+          const punchGain = this.ctx.createGain();
+          punchOsc.type = 'triangle';
+          punchOsc.frequency.setValueAtTime(240, t);
+          punchOsc.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+
+          punchGain.gain.setValueAtTime(0.65, t);
+          punchGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+          punchOsc.connect(punchGain);
+          punchGain.connect(this.ctx.destination);
+          punchOsc.start(t);
+          punchOsc.stop(t + 0.13);
+
+          // 3. Orchestral Cymbal Crash & Shimmer (High-Frequency Resonance)
+          if (this.noiseBuffer) {
+            const crash = this.ctx.createBufferSource();
+            crash.buffer = this.noiseBuffer;
+
+            const crashFilter = this.ctx.createBiquadFilter();
+            crashFilter.type = 'highpass';
+            crashFilter.frequency.setValueAtTime(4800, t);
+
+            const crashGain = this.ctx.createGain();
+            crashGain.gain.setValueAtTime(0.38, t);
+            crashGain.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+
+            crash.connect(crashFilter);
+            crashFilter.connect(crashGain);
+            crashGain.connect(this.ctx.destination);
+            crash.start(t);
+            crash.stop(t + 2.45);
+          }
+
+          // 4. Regal Chord Resonance (Timpani & Brass Undertones)
+          const chord = [220, 277.18, 329.63, 440];
+          chord.forEach((freq, idx) => {
+            const hOsc = this.ctx.createOscillator();
+            const hGain = this.ctx.createGain();
+            hOsc.type = 'sine';
+            hOsc.frequency.setValueAtTime(freq, t + 0.02);
+
+            hGain.gain.setValueAtTime(0.0, t);
+            hGain.gain.linearRampToValueAtTime(0.14 / (idx + 1), t + 0.07);
+            hGain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+
+            hOsc.connect(hGain);
+            hGain.connect(this.ctx.destination);
+            hOsc.start(t + 0.02);
+            hOsc.stop(t + 1.85);
+          });
         } catch (e) {}
       }
 
       playLatch() {
-        if (!state.sfxEnabled) return;
+        if (!this.isAudioEnabled()) return;
         try {
           this.init();
           if (!this.ctx) return;
@@ -2136,48 +2379,25 @@
           const gain = this.ctx.createGain();
 
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(340, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.14);
+          osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.12);
 
-          gain.gain.setValueAtTime(0.45, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.14);
+          gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
 
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.start();
-          osc.stop(this.ctx.currentTime + 0.15);
+          osc.stop(this.ctx.currentTime + 0.13);
         } catch (e) {}
       }
 
+      playTick(speedRatio = 1) {
+        this.playDrumTap(Math.min(0.4 + speedRatio * 0.4, 0.9));
+      }
+
       playFanfare() {
-        if (!state.sfxEnabled) return;
-        try {
-          this.init();
-          if (!this.ctx) return;
-          const notes = [
-            { f: 523.25, t: 0.0, d: 0.16 }, // C5
-            { f: 659.25, t: 0.12, d: 0.16 }, // E5
-            { f: 783.99, t: 0.24, d: 0.18 }, // G5
-            { f: 1046.50, t: 0.40, d: 0.6 }, // C6
-            { f: 1318.51, t: 0.55, d: 0.9 }, // E6
-          ];
-
-          notes.forEach(n => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(n.f, this.ctx.currentTime + n.t);
-
-            gain.gain.setValueAtTime(0.0, this.ctx.currentTime + n.t);
-            gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + n.t + 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + n.t + n.d);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(this.ctx.currentTime + n.t);
-            osc.stop(this.ctx.currentTime + n.t + n.d);
-          });
-        } catch (e) {}
+        this.playDramaticImpact();
       }
     }
 
@@ -2828,11 +3048,21 @@
         updateActivePrizeUI();
         const nextOrder = nextPrize.orderNum || (state.prizes.indexOf(nextPrize) + 1);
         showToast(`Auto-advanced to: #${nextOrder} ${nextPrize.name}`);
+
+        // Instantly sync the Prize Showcase modal if currently open
+        if (document.getElementById('prizeRevealModal')?.classList.contains('open')) {
+          showPrizeRevealModal();
+        }
         return nextPrize;
       } else {
         renderPrizesUI();
         updateActivePrizeUI();
-        showToast('All prizes in the draw have been completed!');
+        showToast('แจกรางวัลครบทุกรายการแล้ว (All prizes completed)');
+
+        // Instantly sync the Prize Showcase modal to congratulatory state if open
+        if (document.getElementById('prizeRevealModal')?.classList.contains('open')) {
+          showPrizeRevealModal();
+        }
         return null;
       }
     }
@@ -3533,14 +3763,32 @@
     document.getElementById('btnAddPrize').onclick = () => openEditPrizeModal(null);
 
     /* =====================================================================
-       PRE-SPIN REVEAL MODAL
+       PRE-SPIN PRIZE SHOWCASE / TEASER MODAL & RESIZE ENGINE
        ===================================================================== */
     function showPrizeRevealModal() {
       const prize = getActivePrize();
-      if (!prize) return;
+      const modal = document.getElementById('prizeRevealModal');
+      if (!modal) return;
+
+      const totalPrizes = state.prizes.length;
+      const allDepleted = totalPrizes > 0 && state.prizes.every(p => p.remaining <= 0);
+
+      if (allDepleted || !prize) {
+        document.getElementById('modalRevealTier').textContent = '✦ GRAND FINALE ✦';
+        document.getElementById('modalRevealTitle').textContent = 'แจกรางวัลครบทุกรายการแล้ว';
+        document.getElementById('modalRevealNotes').textContent = 'ขอแสดงความยินดีกับผู้ได้รับรางวัลทุกท่าน!';
+        document.getElementById('modalRevealRemaining').textContent = 'แจกรางวัลครบทุกชิ้นแล้ว (All Prizes Completed)';
+        const revealImg = document.getElementById('modalRevealImg');
+        if (revealImg) revealImg.src = DEFAULT_PRIZE_FALLBACK_IMG;
+        modal.classList.add('open');
+        return;
+      }
 
       const orderNum = prize.orderNum || (state.prizes.indexOf(prize) + 1);
-      document.getElementById('modalRevealTier').textContent = `UP NEXT: ${(prize.tier || `RANK #${orderNum}`).toUpperCase()}`;
+      const isGrandPrize = orderNum === totalPrizes || (prize.tier && prize.tier.toUpperCase().includes('GRAND'));
+      const badgeText = isGrandPrize ? '✦ GRAND PRIZE ✦' : `✦ PRIZE #${orderNum} / ${totalPrizes} ✦`;
+
+      document.getElementById('modalRevealTier').textContent = badgeText;
       const revealImg = document.getElementById('modalRevealImg');
       if (revealImg) {
         revealImg.onerror = () => {
@@ -3551,20 +3799,81 @@
       }
       document.getElementById('modalRevealTitle').textContent = `#${orderNum} - ${prize.name}`;
       document.getElementById('modalRevealNotes').textContent = prize.notes || '';
-      document.getElementById('modalRevealRemaining').textContent = `${prize.remaining} of ${prize.quantity} remaining in this draw`;
+      document.getElementById('modalRevealRemaining').textContent = `คงเหลือ ${prize.remaining} / ${prize.quantity} ชิ้น`;
 
-      document.getElementById('prizeRevealModal').classList.add('open');
+      modal.classList.add('open');
       audio.playLatch();
+    }
+
+    function closePrizeRevealModal() {
+      const modal = document.getElementById('prizeRevealModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function togglePrizeRevealModal() {
+      const modal = document.getElementById('prizeRevealModal');
+      if (!modal) return;
+      if (modal.classList.contains('open')) closePrizeRevealModal();
+      else showPrizeRevealModal();
+    }
+
+    function initPrizeShowcaseResize() {
+      const dialog = document.getElementById('prizeShowcaseDialog');
+      const handle = document.getElementById('prizeShowcaseResizeHandle');
+      if (!dialog || !handle) return;
+
+      const savedSize = localStorage.getItem('dnd_prize_showcase_size');
+      if (savedSize) {
+        try {
+          const sz = JSON.parse(savedSize);
+          if (sz.width) dialog.style.width = `${sz.width}px`;
+          if (sz.height) dialog.style.height = `${sz.height}px`;
+        } catch (e) {}
+      }
+
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startW = dialog.offsetWidth;
+        const startH = dialog.offsetHeight;
+        let rafId = null;
+
+        const onMouseMove = (me) => {
+          if (rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(() => {
+            const newW = Math.max(320, Math.min(window.innerWidth * 0.96, startW + (me.clientX - startX)));
+            const newH = Math.max(360, Math.min(window.innerHeight * 0.96, startH + (me.clientY - startY)));
+            dialog.style.width = `${newW}px`;
+            dialog.style.height = `${newH}px`;
+          });
+        };
+
+        const onMouseUp = () => {
+          if (rafId) cancelAnimationFrame(rafId);
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          localStorage.setItem('dnd_prize_showcase_size', JSON.stringify({
+            width: dialog.offsetWidth,
+            height: dialog.offsetHeight
+          }));
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
     }
 
     document.getElementById('btnRevealPrizeQuick').onclick = showPrizeRevealModal;
     document.getElementById('dockPrizePill').onclick = showPrizeRevealModal;
     document.getElementById('btnStartDrawFromReveal').onclick = () => {
-      document.getElementById('prizeRevealModal').classList.remove('open');
+      closePrizeRevealModal();
     };
     document.getElementById('prizeRevealModal').onclick = (e) => {
       if (e.target.id === 'prizeRevealModal') {
-        document.getElementById('prizeRevealModal').classList.remove('open');
+        closePrizeRevealModal();
       }
     };
 
@@ -3895,6 +4204,7 @@
       }
 
       audio.init();
+      audio.startDrumRoll();
 
       // Instantly lift conceal mask and reveal dynamic rolling tape
       setConcealedState(false);
@@ -3972,6 +4282,10 @@
           lastTickCardIndex = currentCardIndex;
         }
 
+        const elapsedRatio = Math.min(elapsed / totalDuration, 1);
+        const speedRatio = Math.max(velocity / MAX_VELOCITY, 0.1);
+        audio.updateDrumRoll(elapsedRatio, speedRatio);
+
         renderVirtualCards(currentY);
 
         if (state.spinPhase !== 'SETTLE') {
@@ -4037,6 +4351,8 @@
       state.isSpinning = false;
       state.spinPhase = 'IDLE';
 
+      audio.stopDrumRoll();
+
       currentY = targetY;
       renderVirtualCards(currentY);
 
@@ -4077,7 +4393,7 @@
       state.pendingWinner = { participant: winner, prize: prize, record: record };
 
       setTimeout(() => {
-        audio.playFanfare();
+        audio.playDramaticImpact();
         celebration.burst();
         showWinnerSpotlight(winner);
       }, 250);
@@ -4175,8 +4491,25 @@
        GLOBAL KEYBOARD CONTROLS
        ===================================================================== */
     window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable) {
         return;
+      }
+
+      // 1. MAC COMMAND (META) KEY SHORTCUT: Toggle Prize Showcase / Teaser Modal
+      if (e.key === 'Meta') {
+        e.preventDefault();
+        togglePrizeRevealModal();
+        return;
+      }
+
+      // 2. ESCAPE KEY SHORTCUT: Close Prize Showcase Modal
+      if (e.key === 'Escape') {
+        const prizeModal = document.getElementById('prizeRevealModal');
+        if (prizeModal && prizeModal.classList.contains('open')) {
+          e.preventDefault();
+          closePrizeRevealModal();
+          return;
+        }
       }
 
       // WINNER OVERLAY CONTROLS
@@ -4202,7 +4535,7 @@
         }
 
         if (document.getElementById('prizeRevealModal').classList.contains('open')) {
-          document.getElementById('prizeRevealModal').classList.remove('open');
+          closePrizeRevealModal();
         }
 
         if (!state.isSpinning) {
@@ -4224,7 +4557,7 @@
         checkAdminAccess();
       } else if (e.key === 'p' || e.key === 'P' || e.code === 'KeyP') {
         e.preventDefault();
-        showPrizeRevealModal();
+        togglePrizeRevealModal();
       } else if (e.key === 'f' || e.key === 'F' || e.code === 'KeyF') {
         e.preventDefault();
         toggleFullscreen();
@@ -4719,6 +5052,7 @@
     /* BOOTSTRAP APPLICATION */
     window.addEventListener('DOMContentLoaded', () => {
       initData();
+      initPrizeShowcaseResize();
       if (navigator.onLine) {
         syncGoogleSheet(false);
         syncPrizeSheet(false);
