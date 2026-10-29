@@ -1192,9 +1192,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 34px;
+      min-width: 44px;
       height: 34px;
-      padding: 0 4px;
+      padding: 0 8px;
       background: rgba(245, 158, 11, 0.14);
       border: 1.5px solid rgba(255, 215, 0, 0.55);
       border-radius: var(--radius-sm);
@@ -1202,6 +1202,7 @@
       font-size: 0.8rem;
       font-weight: 800;
       letter-spacing: 0.04em;
+      white-space: nowrap;
       flex-shrink: 0;
       box-shadow: 0 0 8px rgba(245, 158, 11, 0.15);
     }
@@ -1516,8 +1517,8 @@
         <span>Settings</span>
       </button>
 
-      <div class="dock-pill-prize" id="dockPrizePill" title="Click to Reveal Current Prize (Hotkey: P)">
-        <span class="prize-tag" id="dockPrizeTier">GRAND</span>
+      <div class="dock-pill-prize" id="dockPrizePill" title="Click to Reveal Current Prize (Hotkey: G)">
+        <span class="prize-tag" id="dockPrizeTier">Prize #1</span>
         <span class="prize-name" id="dockPrizeName">MacBook Pro 16" M3 Max</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       </div>
@@ -1559,8 +1560,8 @@
             <img src="" alt="Prize" class="prize-thumb-mini" id="activePrizeThumb">
             <div class="prize-text-wrap">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="prize-tier-badge" id="activePrizeTier">GRAND PRIZE</span>
-                <span class="prize-remain-badge" id="activePrizeRemaining">1 of 1 remaining</span>
+                <span class="prize-tier-badge" id="activePrizeTier">Prize #1</span>
+                <span class="prize-remain-badge" id="activePrizeRemaining">คงเหลือ 1 / 1 ชิ้น</span>
               </div>
               <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
                 <span class="prize-title-display" id="activePrizeTitle">MacBook Pro 16"</span>
@@ -1944,12 +1945,12 @@
   <!-- PRE-SPIN REVEAL MODAL -->
   <div class="modal-backdrop" id="prizeRevealModal">
     <div class="modal-dialog prize-reveal-modal">
-      <span class="prize-reveal-badge" id="modalRevealTier">UP NEXT: GRAND PRIZE</span>
+      <span class="prize-reveal-badge" id="modalRevealTier">Prize #1</span>
       <img src="" alt="Prize" class="prize-reveal-img" id="modalRevealImg">
       <h2 class="prize-reveal-name" id="modalRevealTitle">MacBook Pro 16"</h2>
-      <p class="prize-reveal-notes" id="modalRevealNotes">Space Black • 36GB Unified Memory</p>
+      <p class="prize-reveal-notes" id="modalRevealNotes" style="display: none;"></p>
       <div style="margin-bottom: 24px; font-size: 0.88rem; color: #ffd700; font-weight: 700;">
-        <span id="modalRevealRemaining">1 remaining in this tier</span>
+        <span id="modalRevealRemaining">คงเหลือ 1 / 1 ชิ้น</span>
       </div>
       <button class="btn-spin-main" id="btnStartDrawFromReveal" style="width: 80%;">
         READY TO DRAW
@@ -1969,9 +1970,9 @@
       <div class="winner-minimal-prize">
         <img src="" alt="Prize" class="winner-minimal-prize-img" id="modalWinnerPrizeImg">
         <div style="display: flex; flex-direction: column; gap: 3px;">
-          <span style="font-size: 0.74rem; font-weight: 800; color: #ffd700; text-transform: uppercase;" id="modalWinnerPrizeTier">GRAND PRIZE</span>
+          <span style="font-size: 0.74rem; font-weight: 800; color: #ffd700; text-transform: uppercase;" id="modalWinnerPrizeTier">Prize #1</span>
           <span style="font-size: 1.15rem; font-weight: 800; color: #fff;" id="modalWinnerPrizeName">MacBook Pro 16"</span>
-          <span style="font-size: 0.78rem; color: var(--text-muted);" id="modalWinnerPrizeNotes">Space Black</span>
+          <span style="font-size: 0.78rem; color: var(--text-muted); display: none;" id="modalWinnerPrizeNotes"></span>
         </div>
       </div>
 
@@ -2087,6 +2088,109 @@
     };
 
     /* =====================================================================
+       TRIPLE SOUND ENGINE (LOCAL OFFLINE AUDIO ASSETS WITH SYNTH FALLBACK)
+       ===================================================================== */
+    const sfxSpin = new Audio('audio/spin_lucky_game.mp3');
+    sfxSpin.preload = 'auto';
+    sfxSpin.loop = true;
+
+    const sfxPop = new Audio('audio/pop_game.mp3');
+    sfxPop.preload = 'auto';
+
+    const sfxClap = new Audio('audio/clap_applause.mp3');
+    sfxClap.preload = 'auto';
+
+    function attachAudioFallback(audioEl, altSources) {
+      let altIdx = 0;
+      audioEl.addEventListener('error', () => {
+        if (altIdx < altSources.length) {
+          audioEl.src = altSources[altIdx++];
+          audioEl.load();
+        }
+      });
+    }
+
+    attachAudioFallback(sfxSpin, ['audio/spin_lucky_game.m4a', 'public/audio/spin_lucky_game.mp3', 'public/audio/spin_lucky_game.m4a']);
+    attachAudioFallback(sfxPop, ['audio/pop_game.m4a', 'public/audio/pop_game.mp3', 'public/audio/pop_game.m4a']);
+    attachAudioFallback(sfxClap, ['audio/clap_applause.m4a', 'public/audio/clap_applause.mp3', 'public/audio/clap_applause.m4a']);
+
+    function isSoundEnabled() {
+      if (state.soundEnabled !== undefined && !state.soundEnabled) return false;
+      if (state.sfxEnabled !== undefined && !state.sfxEnabled) return false;
+      return true;
+    }
+
+    let isSpinAudioActive = false;
+
+    function playSpinSound() {
+      if (!isSoundEnabled()) return;
+      isSpinAudioActive = true;
+      if (sfxSpin.error) {
+        audio.playDrumRoll();
+        return;
+      }
+      try {
+        sfxSpin.currentTime = 0;
+        const playPromise = sfxSpin.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            if (isSpinAudioActive) {
+              audio.playDrumRoll();
+            }
+          });
+        }
+      } catch (err) {
+        audio.playDrumRoll();
+      }
+    }
+
+    function stopSpinSound() {
+      isSpinAudioActive = false;
+      try {
+        sfxSpin.pause();
+        sfxSpin.currentTime = 0;
+      } catch (e) {}
+      audio.stopDrumRoll();
+    }
+
+    function playPopSound() {
+      if (!isSoundEnabled()) return;
+      if (sfxPop.error) {
+        audio.playBassDrumImpact();
+        return;
+      }
+      try {
+        sfxPop.currentTime = 0;
+        const playPromise = sfxPop.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            audio.playBassDrumImpact();
+          });
+        }
+      } catch (e) {
+        audio.playBassDrumImpact();
+      }
+    }
+
+    function playClapSound() {
+      if (!isSoundEnabled()) return;
+      try {
+        sfxClap.currentTime = 0;
+        const playPromise = sfxClap.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {});
+        }
+      } catch (e) {}
+    }
+
+    function stopClapSound() {
+      try {
+        sfxClap.pause();
+        sfxClap.currentTime = 0;
+      } catch (e) {}
+    }
+
+    /* =====================================================================
        WEB AUDIO SYNTHESIZER
        ===================================================================== */
     class SoundEngine {
@@ -2122,9 +2226,7 @@
       }
 
       isAudioEnabled() {
-        if (state.soundEnabled !== undefined && !state.soundEnabled) return false;
-        if (state.sfxEnabled !== undefined && !state.sfxEnabled) return false;
-        return true;
+        return isSoundEnabled();
       }
 
       // Single acoustic drum roll strike:
@@ -2874,10 +2976,8 @@
           const remaining = Math.max(0, rowQty - alreadyDrawnCount);
           const normalizedImg = normalizeGoogleImageUrl(rowPic);
 
-          // Preserve existing user customization if available
-          const existing = state.prizes.find(p => String(p.id) === String(prizeId) || p.name.trim().toLowerCase() === rowList.toLowerCase() || p.orderNum === orderNum);
-
-          const tier = (existing && existing.tier) ? existing.tier : `Rank #${orderNum}`;
+          // Prize Category & Clean Text
+          const tier = `Prize #${orderNum}`;
 
           return {
             id: prizeId,
@@ -2886,7 +2986,7 @@
             tier: tier,
             quantity: rowQty,
             remaining: remaining,
-            notes: (existing && existing.notes) ? existing.notes : '',
+            notes: '',
             imageUrl: normalizedImg,
             imageBase64: (existing && existing.imageBase64) ? existing.imageBase64 : null,
             image: normalizedImg || (existing && existing.image) || DEFAULT_PRIZE_FALLBACK_IMG
@@ -3360,7 +3460,7 @@
         const opt = document.createElement('option');
         opt.value = p.id;
         const statusTag = p.remaining <= 0 ? ' [DEPLETED]' : ` (${p.remaining}/${p.quantity})`;
-        opt.textContent = `#${orderNum} - ${p.name}${statusTag}`;
+        opt.textContent = `Prize #${orderNum} - ${p.name}${statusTag}`;
         if (p.id === state.activePrizeId) {
           opt.selected = true;
         }
@@ -3384,20 +3484,15 @@
       const orderNum = prize.orderNum || (state.prizes.indexOf(prize) + 1);
 
       const tierEl = document.getElementById('activePrizeTier');
-      if (tierEl) tierEl.textContent = (prize.tier || `RANK #${orderNum}`).toUpperCase();
+      if (tierEl) tierEl.textContent = `Prize #${orderNum}`;
 
       const titleEl = document.getElementById('activePrizeTitle');
-      if (titleEl) titleEl.textContent = `#${orderNum} - ${prize.name}`;
+      if (titleEl) titleEl.textContent = prize.name;
 
       const remainEl = document.getElementById('activePrizeRemaining');
       if (remainEl) {
-        if (prize.remaining <= 0) {
-          remainEl.textContent = `0 of ${prize.quantity} remaining (COMPLETED)`;
-          remainEl.style.color = '#f87171';
-        } else {
-          remainEl.textContent = `${prize.remaining} of ${prize.quantity} remaining`;
-          remainEl.style.color = 'var(--text-muted)';
-        }
+        remainEl.textContent = `คงเหลือ ${prize.remaining} / ${prize.quantity} ชิ้น`;
+        remainEl.style.color = prize.remaining <= 0 ? '#f87171' : 'var(--text-muted)';
       }
 
       const thumbEl = document.getElementById('activePrizeThumb');
@@ -3410,10 +3505,10 @@
       }
 
       const dockTierEl = document.getElementById('dockPrizeTier');
-      if (dockTierEl) dockTierEl.textContent = (prize.tier || `RANK #${orderNum}`).toUpperCase();
+      if (dockTierEl) dockTierEl.textContent = `Prize #${orderNum}`;
 
       const dockNameEl = document.getElementById('dockPrizeName');
-      if (dockNameEl) dockNameEl.textContent = `#${orderNum} - ${prize.name}`;
+      if (dockNameEl) dockNameEl.textContent = prize.name;
 
       renderPrizeSelect();
     }
@@ -3477,14 +3572,14 @@
             </svg>
           </div>
           <div class="prize-order-badge" title="Draw Sequence #${orderNum}">
-            #${orderNum}
+            Prize #${orderNum}
           </div>
           <img src="${prize.imageUrl || prize.image || DEFAULT_PRIZE_FALLBACK_IMG}" alt="${prize.name}" class="prize-item-thumb" onerror="this.onerror=null;this.src='${DEFAULT_PRIZE_FALLBACK_IMG}';">
           <div class="prize-item-info">
             <div class="prize-item-title">${prize.name}</div>
             <div class="prize-item-sub">
-              <span style="color:var(--gold-primary);font-weight:700;">${prize.tier || 'Prize'}</span> &bull; 
-              <span>${prize.remaining}/${prize.quantity} left</span>
+              <span style="color:var(--gold-primary);font-weight:700;">Prize #${orderNum}</span> &bull; 
+              <span>คงเหลือ ${prize.remaining} / ${prize.quantity} ชิ้น</span>
             </div>
           </div>
           <div class="prize-item-actions">
@@ -3677,7 +3772,9 @@
       if (!prize) return;
 
       const orderNum = prize.orderNum || (state.prizes.indexOf(prize) + 1);
-      document.getElementById('modalRevealTier').textContent = `UP NEXT: ${(prize.tier || `RANK #${orderNum}`).toUpperCase()}`;
+      const tierEl = document.getElementById('modalRevealTier');
+      if (tierEl) tierEl.textContent = `Prize #${orderNum}`;
+
       const revealImg = document.getElementById('modalRevealImg');
       if (revealImg) {
         revealImg.onerror = () => {
@@ -3686,12 +3783,20 @@
         };
         revealImg.src = prize.imageUrl || prize.image || DEFAULT_PRIZE_FALLBACK_IMG;
       }
-      document.getElementById('modalRevealTitle').textContent = `#${orderNum} - ${prize.name}`;
-      document.getElementById('modalRevealNotes').textContent = prize.notes || '';
-      document.getElementById('modalRevealRemaining').textContent = `${prize.remaining} of ${prize.quantity} remaining in this draw`;
+      const titleEl = document.getElementById('modalRevealTitle');
+      if (titleEl) titleEl.textContent = prize.name;
+
+      const notesEl = document.getElementById('modalRevealNotes');
+      if (notesEl) {
+        notesEl.textContent = '';
+        notesEl.style.display = 'none';
+      }
+
+      const remainEl = document.getElementById('modalRevealRemaining');
+      if (remainEl) remainEl.textContent = `คงเหลือ ${prize.remaining} / ${prize.quantity} ชิ้น`;
 
       document.getElementById('prizeRevealModal').classList.add('open');
-      audio.playBassDrumImpact();
+      playPopSound();
     }
 
     function closePrizeRevealModal() {
@@ -4044,7 +4149,7 @@
       }
 
       audio.init();
-      audio.playDrumRoll();
+      playSpinSound();
 
       // Instantly lift conceal mask and reveal dynamic rolling tape
       setConcealedState(false);
@@ -4191,7 +4296,7 @@
       state.isSpinning = false;
       state.spinPhase = 'IDLE';
 
-      audio.stopDrumRoll();
+      stopSpinSound();
 
       currentY = targetY;
       renderVirtualCards(currentY);
@@ -4217,7 +4322,7 @@
         prizeId: prize.id,
         prizeOrderNum: prize.orderNum || (state.prizes.indexOf(prize) + 1),
         prizeName: prize.name,
-        prizeTier: prize.tier,
+        prizeTier: `Prize #${prize.orderNum || (state.prizes.indexOf(prize) + 1)}`,
         time: new Date().toLocaleTimeString()
       };
 
@@ -4233,7 +4338,6 @@
       state.pendingWinner = { participant: winner, prize: prize, record: record };
 
       setTimeout(() => {
-        audio.playBassDrumImpact();
         celebration.burst();
         showWinnerSpotlight(winner);
       }, 250);
@@ -4243,6 +4347,9 @@
        WINNER SPOTLIGHT & KEYBOARD CONTROLS (CONFIRM: ENTER / CANCEL: BACKSPACE)
        ===================================================================== */
     function showWinnerSpotlight(winner) {
+      playPopSound();
+      playClapSound();
+
       const prize = getActivePrize();
       const orderNum = prize.orderNum || (state.prizes.indexOf(prize) + 1);
 
@@ -4259,9 +4366,15 @@
         };
         prizeImgEl.src = prize.imageUrl || prize.image || DEFAULT_PRIZE_FALLBACK_IMG;
       }
-      document.getElementById('modalWinnerPrizeTier').textContent = (prize.tier || `RANK #${orderNum}`).toUpperCase();
-      document.getElementById('modalWinnerPrizeName').textContent = prize.name;
-      document.getElementById('modalWinnerPrizeNotes').textContent = prize.notes || '';
+      const tierEl = document.getElementById('modalWinnerPrizeTier');
+      if (tierEl) tierEl.textContent = `Prize #${orderNum}`;
+      const nameEl = document.getElementById('modalWinnerPrizeName');
+      if (nameEl) nameEl.textContent = prize.name;
+      const notesEl = document.getElementById('modalWinnerPrizeNotes');
+      if (notesEl) {
+        notesEl.textContent = '';
+        notesEl.style.display = 'none';
+      }
 
       document.getElementById('winnerModal').classList.add('open');
     }
@@ -4269,6 +4382,7 @@
 
     // 1. CONFIRM WINNER (ENTER KEY)
     function confirmWinner() {
+      stopClapSound();
       const modal = document.getElementById('winnerModal');
       if (!modal.classList.contains('open') || !state.pendingWinner) return;
 
@@ -4291,6 +4405,7 @@
 
     // 2. CANCEL WINNER (BACKSPACE KEY)
     function cancelWinner() {
+      stopClapSound();
       const modal = document.getElementById('winnerModal');
       if (!modal.classList.contains('open') || !state.pendingWinner) return;
 
@@ -4607,6 +4722,10 @@
     /* SOUND EFFECTS TOGGLE */
     function toggleSfx() {
       state.sfxEnabled = !state.sfxEnabled;
+      if (!state.sfxEnabled) {
+        stopSpinSound();
+        stopClapSound();
+      }
       const sfxLabel = document.getElementById('sfxLabel');
       if (sfxLabel) sfxLabel.textContent = state.sfxEnabled ? 'SFX: ON' : 'SFX: MUTED';
       const statusText = document.getElementById('sfxStatusText');
